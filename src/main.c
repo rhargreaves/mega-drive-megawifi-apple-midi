@@ -16,6 +16,43 @@
 /// Command buffer
 static char cmd_buf[MW_BUFLEN];
 
+static void run_test_2(struct loop_timer* t)
+{
+    enum mw_err err;
+
+    // Join AP
+    VDP_drawText("Associating to AP...", 1, 5);
+    err = mw_ap_assoc(0);
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
+    err = mw_ap_assoc_wait(MS_TO_FRAMES(30000));
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
+    mw_sleep(3 * 60);
+    VDP_drawText("DONE!", 22, 5);
+
+    struct mw_ip_cfg ip_cfg = {};
+    struct mw_ip_cfg* ip_cfg_ptr = &ip_cfg;
+    err = mw_ip_current(&ip_cfg_ptr);
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
+    char ip_str[16] = {};
+    uint32_to_ip_str(ip_cfg.addr.addr, ip_str);
+    VDP_drawText(ip_str, 1, 6);
+
+    goto out;
+
+err:
+    VDP_drawText("ERROR GETTING IP", 1, 4);
+    // mw_ap_disassoc();
+
+out:
+    loop_timer_del(t);
+}
+
 /// MegaWiFi initialization
 static void megawifi_init_cb(struct loop_timer* t)
 {
@@ -36,8 +73,9 @@ static void megawifi_init_cb(struct loop_timer* t)
         line[19] = ver_minor + '0';
         VDP_drawText(line, 1, 3);
         // Configuration complete, run test function next frame
-        //  t->timer_cb = run_test;
-        loop_timer_start(t, 1);
+        // t->timer_cb = run_test;
+        //        loop_timer_start(t, 1);
+        run_test_2(t);
     }
 }
 
@@ -75,7 +113,7 @@ int main()
 {
     init();
 
-    VDP_drawText("Hello", 1, 1);
+    VDP_drawText("Hello 2", 1, 1);
 
     loop();
 

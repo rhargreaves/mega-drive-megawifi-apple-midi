@@ -1,3 +1,4 @@
 #!/bin/bash
 ROM="$1"
+rm ~/.local/share/blastem/out/save.nor
 ~/Emulation/Mega\ Drive/Emulators/blastem-osx-0.6.2/blastem "$ROM"
