@@ -211,7 +211,7 @@ const char* str_to_uint8(const char* str, uint8_t* result)
     return str;
 }
 
-int long_to_str(long num, char* str, int buf_len, int pad_len, char pad_chr)
+int long_to_str(u32 num, char* str, int buf_len, int pad_len, char pad_chr)
 {
     int i = 0;
     int j;

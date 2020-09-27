@@ -219,7 +219,7 @@ const char *str_to_uint8(const char *strIn, uint8_t *result);
  * \warning Function uses lots of divisions. Maybe it is not the best of the
  * ideas using it in a game loop.
  ****************************************************************************/
-int long_to_str(long num, char *str, int buf_len, int pad_len, char pad_chr);
+int long_to_str(u32 num, char *str, int buf_len, int pad_len, char pad_chr);
 
 /************************************************************************//**
  * \brief Converts a 8-bit number to its hexadecimal string representation.
