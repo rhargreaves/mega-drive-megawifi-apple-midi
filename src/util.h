@@ -1,4 +1,4 @@
-/************************************************************************//**
+/****************************************************************************
  * \file
  *
  * \brief General purpose utilities.
@@ -12,8 +12,12 @@
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
+
 #include <stdint.h>
 #include <stddef.h>
+
+
+#include <types.h>
 
 #ifndef TRUE
 /// TRUE value for boolean comparisons

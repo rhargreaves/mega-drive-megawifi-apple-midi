@@ -1,9 +1,7 @@
-#include <stdint.h>
-#include <types.h>
-
-#include <memory.h>
 
 #include "util.h"
+
+#include <memory.h>
 #include <string.h>
 
 const char* str_is_uint8(const char* str)
