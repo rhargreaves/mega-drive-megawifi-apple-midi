@@ -33,9 +33,9 @@ CCFLAGS = -std=c11 -Werror \
 	-fno-builtin -DBUILD='"$(BUILD)"' \
 	-m68000 -O0 -c -fomit-frame-pointer -g
 Z80FLAGS = -vb2
-ASFLAGS = -m68000 --register-prefix-optional
+ASFLAGS = -m68000 --register-prefix-optional -I newlib -I .
 LIBS =  -L$(GENDEV)/m68k-elf/lib -L$(GENDEV)/lib/gcc/m68k-elf/$(GCC_VER)/* -L$(GENDEV)/sgdk/lib -lmd -lnosys
-LINKFLAGS = -T $(GENDEV)/sgdk/md.ld -nostdlib
+LINKFLAGS = -T mw.ld -nostdlib
 ARCHIVES = $(GENDEV)/sgdk/$(LIB)/libmd.a
 ARCHIVES += $(GENDEV)/$(LIB)/gcc/m68k-elf/$(GCC_VER)/libgcc.a
 
@@ -44,7 +44,9 @@ BOOT_RESOURCES=
 
 BOOTSS=$(wildcard boot/*.s)
 BOOTSS+=$(wildcard src/boot/*.s)
+NEWLIBSS=$(wildcard newlib/*.s)
 BOOT_RESOURCES+=$(BOOTSS:.s=.o)
+NEWLIB_RESOURCES+=$(NEWLIBSS:.s=.o)
 RESS=$(wildcard res/*.res)
 RESS+=$(wildcard *.res)
 RESOURCES+=$(RESS:.res=.o)
@@ -66,6 +68,9 @@ all: bin/out.bin
 boot/sega.o: boot/rom_head.bin
 	$(AS) $(ASFLAGS) boot/sega.s -o $@
 
+newlib/setjmp.o:
+	$(AS) $(ASFLAGS) newlib/setjmp.s -o $@
+
 bin/%.bin: %.elf
 	mkdir -p bin
 	$(OBJC) -O binary $< temp.bin
@@ -74,8 +79,8 @@ bin/%.bin: %.elf
 	rm temp.bin
 	echo $(BUILD) > bin/version.txt
 
-%.elf: $(OBJS) $(BOOT_RESOURCES)
-	$(LD) -o $@ $(LINKFLAGS) $(BOOT_RESOURCES) $(ARCHIVES) $(OBJS) $(LIBS)
+%.elf: $(OBJS) $(BOOT_RESOURCES) $(NEWLIB_RESOURCES)
+	$(LD) -o $@ $(LINKFLAGS) $(BOOT_RESOURCES) $(NEWLIB_RESOURCES) $(ARCHIVES) $(OBJS) $(LIBS)
 
 %.o80: %.s80
 	$(ASMZ80) $(Z80FLAGS) -o $@ $<
