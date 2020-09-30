@@ -50,16 +50,17 @@ static mw_err open_tcp_socket(struct loop_timer* t)
     if (MW_ERR_NONE == err) {
         VDP_drawText("Incoming connection established", 1, 9);
 
-        s16 buf_length;
-        char data[2048];
+        char line[40];
+        s16 buf_length = sizeof(line);
         u8 ch;
 
-        err = mw_recv_sync(&ch, data, &buf_length, 60 * 60);
+        err = mw_recv_sync(&ch, line, &buf_length, 60 * 60);
         if (MW_ERR_NONE == err) {
+            line[buf_length] = '\0';
             // Data received
             VDP_drawText("Data received", 1, 10);
-            char text[10];
-            sprintf(text, "Data: %s", data);
+            char text[100] = {};
+            sprintf(text, "Data: %s Len: %d", line, buf_length);
             VDP_drawText(text, 1, 11);
 
         } else {
