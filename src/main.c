@@ -38,14 +38,48 @@ static mw_err associate_ap(struct loop_timer* t)
     return MW_ERR_NONE;
 }
 
+static mw_err open_tcp_socket(struct loop_timer* t)
+{
+    enum mw_err err;
+
+    err = mw_tcp_bind(1, 5567);
+    if (MW_ERR_NONE == err) {
+        // Wait up to an hour for an incoming connection
+        err = mw_sock_conn_wait(1, 60 * 60);
+    }
+    if (MW_ERR_NONE == err) {
+        VDP_drawText("Incoming connection established", 1, 9);
+
+        s16 buf_length;
+        char data[2048];
+        u8 ch;
+
+        err = mw_recv_sync(&ch, data, &buf_length, 60 * 60);
+        if (MW_ERR_NONE == err) {
+            // Data received
+            VDP_drawText("Data received", 1, 10);
+            char text[10];
+            sprintf(text, "Data: %s", data);
+            VDP_drawText(text, 1, 11);
+
+        } else {
+            // Failed to receive data
+            VDP_drawText("Failed to receive data", 1, 10);
+        }
+
+        // Incoming connection established
+    } else {
+        VDP_drawText("Timeout, no connection established", 1, 9);
+        // Timeout, no connection established
+    }
+
+    return MW_ERR_NONE;
+}
+
 static void run_test_2(struct loop_timer* t)
 {
     mw_err err;
 
-    err = associate_ap(t);
-    if (err != MW_ERR_NONE) {
-        goto err;
-    }
     struct mw_ip_cfg* ip_cfg;
     mw_ip_current(&ip_cfg);
     if (err != MW_ERR_NONE) {
@@ -54,6 +88,11 @@ static void run_test_2(struct loop_timer* t)
     char ip_str[16] = {};
     uint32_to_ip_str(ip_cfg->addr.addr, ip_str);
     VDP_drawText(ip_str, 1, 6);
+
+    err = open_tcp_socket(t);
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
 
     goto out;
 
