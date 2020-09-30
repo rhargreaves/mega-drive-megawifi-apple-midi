@@ -1,4 +1,4 @@
-/************************************************************************//**
+/************************************************************************/ /**
  * \file
  *
  * \brief MegaWiFi API implementation.
@@ -29,117 +29,117 @@
 #define _MEGAWIFI_H_
 
 #include "16c550.h"
-#include "mw-msg.h"
 #include "lsd.h"
+#include "mw-msg.h"
 
 /// API version implemented, major number
-#define MW_API_VERSION_MAJOR	1
+#define MW_API_VERSION_MAJOR 1
 
 /// API version implemented, minor number
-#define MW_API_VERSION_MINOR	4
+#define MW_API_VERSION_MINOR 4
 
 /// Timeout for standard commands in milliseconds
-#define MW_COMMAND_TOUT_MS	1000
+#define MW_COMMAND_TOUT_MS 1000
 /// Timeout for TCP connections
-#define MW_CONNECT_TOUT_MS	10000
+#define MW_CONNECT_TOUT_MS 10000
 /// Timeout for HTTP open command in milliseconds
-#define MW_HTTP_OPEN_TOUT_MS	10000
+#define MW_HTTP_OPEN_TOUT_MS 10000
 /// Timeout for the AP scan command in milliseconds
-#define MW_SCAN_TOUT_MS		10000
+#define MW_SCAN_TOUT_MS 10000
 /// Timeout for the AP associate command in milliseconds
-#define MW_ASSOC_TOUT_MS	20000
+#define MW_ASSOC_TOUT_MS 20000
 /// Timeout for upgrade command in milliseconds
-#define MW_UPGRADE_TOUT_MS	180000
+#define MW_UPGRADE_TOUT_MS 180000
 /// Milliseconds between status polls while in wm_ap_assoc_wait()
-#define MW_STAT_POLL_MS		250
+#define MW_STAT_POLL_MS 250
 
 /// Error codes for MegaWiFi API functions
 enum mw_err {
-	MW_ERR_NONE = 0,		///< No error (success)
-	MW_ERR,				///< General error
-	MW_ERR_NOT_READY,		///< Not ready to run command
-	MW_ERR_BUFFER_TOO_SHORT,	///< Command buffer is too small
-	MW_ERR_PARAM,			///< Input parameter out of range
-	MW_ERR_SEND,			///< Error sending data
-	MW_ERR_RECV			///< Error receiving data
+    MW_ERR_NONE = 0, ///< No error (success)
+    MW_ERR, ///< General error
+    MW_ERR_NOT_READY, ///< Not ready to run command
+    MW_ERR_BUFFER_TOO_SHORT, ///< Command buffer is too small
+    MW_ERR_PARAM, ///< Input parameter out of range
+    MW_ERR_SEND, ///< Error sending data
+    MW_ERR_RECV ///< Error receiving data
 };
 
 /// Supported HTTP methods
 enum mw_http_method {
-    MW_HTTP_METHOD_GET = 0,    ///< HTTP GET Method
-    MW_HTTP_METHOD_POST,       ///< HTTP POST Method
-    MW_HTTP_METHOD_PUT,        ///< HTTP PUT Method
-    MW_HTTP_METHOD_PATCH,      ///< HTTP PATCH Method
-    MW_HTTP_METHOD_DELETE,     ///< HTTP DELETE Method
-    MW_HTTP_METHOD_HEAD,       ///< HTTP HEAD Method
-    MW_HTTP_METHOD_NOTIFY,     ///< HTTP NOTIFY Method
-    MW_HTTP_METHOD_SUBSCRIBE,  ///< HTTP SUBSCRIBE Method
-    MW_HTTP_METHOD_UNSUBSCRIBE,///< HTTP UNSUBSCRIBE
-    MW_HTTP_METHOD_OPTIONS,    ///< HTTP OPTIONS
+    MW_HTTP_METHOD_GET = 0, ///< HTTP GET Method
+    MW_HTTP_METHOD_POST, ///< HTTP POST Method
+    MW_HTTP_METHOD_PUT, ///< HTTP PUT Method
+    MW_HTTP_METHOD_PATCH, ///< HTTP PATCH Method
+    MW_HTTP_METHOD_DELETE, ///< HTTP DELETE Method
+    MW_HTTP_METHOD_HEAD, ///< HTTP HEAD Method
+    MW_HTTP_METHOD_NOTIFY, ///< HTTP NOTIFY Method
+    MW_HTTP_METHOD_SUBSCRIBE, ///< HTTP SUBSCRIBE Method
+    MW_HTTP_METHOD_UNSUBSCRIBE, ///< HTTP UNSUBSCRIBE
+    MW_HTTP_METHOD_OPTIONS, ///< HTTP OPTIONS
     MW_HTTP_METHOD_MAX,
 };
 
 /** \addtogroup mw_ctrl_pins mw_ctrl_pins
  *  \brief Pins used to control WiFi module.
  *  \{ */
-#define MW__RESET	UART_MCR__OUT1	///< Reset out.
-#define MW__PRG		UART_MCR__OUT2	///< Program out.
-#define MW__PD		UART_MCR__DTR	///< Power Down out.
-#define MW__DAT		UART_MSR__DSR	///< Data request in.
+#define MW__RESET UART_MCR__OUT1 ///< Reset out.
+#define MW__PRG UART_MCR__OUT2 ///< Program out.
+#define MW__PD UART_MCR__DTR ///< Power Down out.
+#define MW__DAT UART_MSR__DSR ///< Data request in.
 /** \} */
 
 /// Maximum SSID length (including '\0').
-#define MW_SSID_MAXLEN		32
+#define MW_SSID_MAXLEN 32
 /// Maximum password length (including '\0').
-#define MW_PASS_MAXLEN		64
+#define MW_PASS_MAXLEN 64
 /// Maximum length of an NTP pool URI (including '\0').
-#define MW_NTP_POOL_MAXLEN	80
+#define MW_NTP_POOL_MAXLEN 80
 /// Number of AP configurations stored to nvflash.
-#define MW_NUM_CFG_SLOTS	3
+#define MW_NUM_CFG_SLOTS 3
 /// Number of DSN servers supported per AP configuration.
-#define MW_NUM_DNS_SERVERS	2
+#define MW_NUM_DNS_SERVERS 2
 /// Length of the FSM queue
-#define MW_FSM_QUEUE_LEN	8
+#define MW_FSM_QUEUE_LEN 8
 /// Maximum number of simultaneous TCP connections
-#define MW_MAX_SOCK			3
+#define MW_MAX_SOCK 3
 /// Control channel used for LSD protocol
-#define MW_CTRL_CH			0
+#define MW_CTRL_CH 0
 /// Channel used for HTTP requests and cert sets
-#define MW_HTTP_CH			LSD_MAX_CH - 1
+#define MW_HTTP_CH LSD_MAX_CH - 1
 
 /// Minimum command buffer length to be able to send all available commands
 /// with minimum data payload. This length might not guarantee that commands
 /// like mw_sntp_cfg_set() can be sent if payload length is big enough).
-#define MW_CMD_MIN_BUFLEN	168
+#define MW_CMD_MIN_BUFLEN 168
 
 /// Access Point data.
 struct mw_ap_data {
-	enum mw_security auth;	///< Security type
-	uint8_t channel;	///< WiFi channel.
-	int8_t rssi;		///< Signal strength.
-	uint8_t ssid_len;	///< Length of ssid field.
-	char *ssid;		///< SSID string (not NULL terminated).
+    enum mw_security auth; ///< Security type
+    uint8_t channel; ///< WiFi channel.
+    int8_t rssi; ///< Signal strength.
+    uint8_t ssid_len; ///< Length of ssid field.
+    char* ssid; ///< SSID string (not NULL terminated).
 };
 
 /// Interface type for the mw_bssid_get() function.
 enum mw_if_type {
-	MW_IF_STATION = 0,	///< Station interface
-	MW_IF_SOFTAP,		///< Access Point interface
-	MW_IF_MAX		///< Number of supported interface types
+    MW_IF_STATION = 0, ///< Station interface
+    MW_IF_SOFTAP, ///< Access Point interface
+    MW_IF_MAX ///< Number of supported interface types
 };
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Module initialization. Must be called once before using any
  *        other function. It also initializes de UART.
  *
  * \param[in] cmd_buf Pointer to the buffer used to send and receive commands.
- * \param[in] buf_len Length of cmdBuf in bytes. 
+ * \param[in] buf_len Length of cmdBuf in bytes.
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-int mw_init(char *cmd_buf, uint16_t buf_len);
+int mw_init(char* cmd_buf, uint16_t buf_len);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Processes sends/receives pending data.
  *
  * Call this function as much as possible to process incoming/outgoing data.
@@ -147,9 +147,12 @@ int mw_init(char *cmd_buf, uint16_t buf_len);
  * \warning No data will be sent/received if this function is not frequently
  * invoked.
  ****************************************************************************/
-static inline void mw_process(void)	{lsd_process();}
+static inline void mw_process(void)
+{
+    lsd_process();
+}
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Sets the callback function to be run when network data is received
  * while waiting for a command reply.
  *
@@ -161,7 +164,7 @@ static inline void mw_process(void)	{lsd_process();}
  ****************************************************************************/
 void mw_cmd_data_cb_set(lsd_recv_cb cmd_recv_cb);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Performs the startup sequence for the WiFi module, and tries
  * detecting it by requesting the version data.
  *
@@ -171,9 +174,9 @@ void mw_cmd_data_cb_set(lsd_recv_cb cmd_recv_cb);
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_detect(uint8_t *major, uint8_t *minor, char **variant);
+enum mw_err mw_detect(uint8_t* major, uint8_t* minor, char** variant);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Obtain module version numbers and string
  *
  * \param[out] version Version numbers (major, minor, micro) in order.
@@ -181,18 +184,18 @@ enum mw_err mw_detect(uint8_t *major, uint8_t *minor, char **variant);
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_version_get(uint8_t version[3], char **variant);
+enum mw_err mw_version_get(uint8_t version[3], char** variant);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Gets the module BSSID (the MAC address) for the specified interface.
  *
  * \param[in] interface_type Type of the interface to obtain BSSID from.
  *
  * \return The requested BSSID (6 byte binary data), or NULL on error.
  ****************************************************************************/
-uint8_t *mw_bssid_get(enum mw_if_type interface_type);
+uint8_t* mw_bssid_get(enum mw_if_type interface_type);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Set default module configuration (AKA factory settings).
  *
  * \return MW_ERR_NONE on success, other code on failure.
@@ -202,7 +205,7 @@ uint8_t *mw_bssid_get(enum mw_if_type interface_type);
  ****************************************************************************/
 enum mw_err mw_default_cfg_set(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Set access point configuration (SSID and password).
  *
  * \param[in] slot Configuration slot to use.
@@ -217,10 +220,10 @@ enum mw_err mw_default_cfg_set(void);
  * \note After a successful invocation, call mw_cfg_save() for changes to
  * be persistent
  ****************************************************************************/
-enum mw_err mw_ap_cfg_set(uint8_t slot, const char *ssid, const char *pass,
-		 enum mw_phy_type phy_type);
+enum mw_err mw_ap_cfg_set(uint8_t slot, const char* ssid, const char* pass,
+    enum mw_phy_type phy_type);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Gets access point configuration (SSID and password).
  *
  * \param[in]  slot Configuration slot to use.
@@ -234,10 +237,10 @@ enum mw_err mw_ap_cfg_set(uint8_t slot, const char *ssid, const char *pass,
  *          to 64 bytes. If ssid is 32 bytes, it will NOT be NULL terminated.
  *          Also if pass is 64 bytes, it will NOT be NULL terminated.
  ****************************************************************************/
-enum mw_err mw_ap_cfg_get(uint8_t slot, char **ssid, char **pass,
-		enum mw_phy_type *phy_type);
+enum mw_err mw_ap_cfg_get(
+    uint8_t slot, char** ssid, char** pass, enum mw_phy_type* phy_type);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Set IPv4 configuration.
  *
  * \param[in] slot Configuration slot to use.
@@ -248,9 +251,9 @@ enum mw_err mw_ap_cfg_get(uint8_t slot, char **ssid, char **pass,
  * \note After a successful invocation, call mw_cfg_save() for changes to
  * be persistent
  ****************************************************************************/
-enum mw_err mw_ip_cfg_set(uint8_t slot, const struct mw_ip_cfg *ip);
+enum mw_err mw_ip_cfg_set(uint8_t slot, const struct mw_ip_cfg* ip);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Get IPv4 configuration.
  *
  * \param[in]  slot Configuration slot to use.
@@ -258,9 +261,9 @@ enum mw_err mw_ip_cfg_set(uint8_t slot, const struct mw_ip_cfg *ip);
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_ip_cfg_get(uint8_t slot, struct mw_ip_cfg **ip);
+enum mw_err mw_ip_cfg_get(uint8_t slot, struct mw_ip_cfg** ip);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Set advanced WiFi configuration.
  *
  * \return MW_ERR_NONE on success, other code on failure.
@@ -276,32 +279,32 @@ enum mw_err mw_ip_cfg_get(uint8_t slot, struct mw_ip_cfg **ip);
  * \note These parameters will not take effect until saved to non-volatile
  * storage (with mw_cfg_save()) and issuing a module reboot.
  ****************************************************************************/
-enum mw_err mw_wifi_adv_cfg_set(const struct mw_wifi_adv_cfg *wifi);
+enum mw_err mw_wifi_adv_cfg_set(const struct mw_wifi_adv_cfg* wifi);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Get advanced WiFi configuration.
  *
  * \return Pointer to the advanced WiFi configuration, or NULL on error.
  ****************************************************************************/
-struct mw_wifi_adv_cfg *mw_wifi_adv_cfg_get(void);
+struct mw_wifi_adv_cfg* mw_wifi_adv_cfg_get(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Saves changed configuration parameters to non-volatile memory.
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
 enum mw_err mw_cfg_save(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Get current IP configuration, of the joined AP.
  *
  * \param[out] ip Double pointer to mw_ip_cfg structure, with IP conf.
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_ip_current(struct mw_ip_cfg **ip);
+enum mw_err mw_ip_current(struct mw_ip_cfg** ip);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Scan for access points.
  *
  * \param[in]  phy_type Bitmask with the PHY type configuration.
@@ -312,9 +315,9 @@ enum mw_err mw_ip_current(struct mw_ip_cfg **ip);
  * \return Length in bytes of the output data if operation completes
  *         successfully, or -1 if scan fails.
  ****************************************************************************/
-int mw_ap_scan(enum mw_phy_type phy_type, char **ap_data, uint8_t *aps);
+int mw_ap_scan(enum mw_phy_type phy_type, char** ap_data, uint8_t* aps);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Parses received AP data and fills information of the AP at "pos".
  *        Useful to extract AP information from the data obtained by
  *        calling mw_ap_scan() function.
@@ -330,10 +333,10 @@ int mw_ap_scan(enum mw_phy_type phy_type, char **ap_data, uint8_t *aps);
  * \note This functions executes locally, does not communicate with the
  *       WiFi module.
  ****************************************************************************/
-int mw_ap_fill_next(const char *ap_data, uint16_t pos,
-		struct mw_ap_data *apd, uint16_t data_len);
+int mw_ap_fill_next(const char* ap_data, uint16_t pos, struct mw_ap_data* apd,
+    uint16_t data_len);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Tries associating to an AP. If successful, also configures IPv4.
  *
  * \param[in] slot Configuration slot to use.
@@ -342,7 +345,7 @@ int mw_ap_fill_next(const char *ap_data, uint16_t pos,
  ****************************************************************************/
 enum mw_err mw_ap_assoc(uint8_t slot);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Polls the module status until it reports device is associated to
  * AP or timeout occurs.
  *
@@ -354,7 +357,7 @@ enum mw_err mw_ap_assoc(uint8_t slot);
  ****************************************************************************/
 enum mw_err mw_ap_assoc_wait(int tout_frames);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Sets default AP/IP configuration.
  *
  * \param[in] slot Configuration slot to use.
@@ -366,21 +369,21 @@ enum mw_err mw_ap_assoc_wait(int tout_frames);
  ****************************************************************************/
 enum mw_err mw_def_ap_cfg(uint8_t slot);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Dissasociates from a previously associated AP.
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
 enum mw_err mw_ap_disassoc(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Gets default AP/IP configuration slot.
  *
  * \return The default configuration slot, of -1 on error.
  ****************************************************************************/
 int mw_def_ap_cfg_get(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Tries establishing a TCP connection with specified server.
  *
  * \param[in] ch       Channel used for the connection.
@@ -391,10 +394,10 @@ int mw_def_ap_cfg_get(void);
  *
  * \return MW_ERR_NONE on success, other code if connection failed.
  ****************************************************************************/
-enum mw_err mw_tcp_connect(uint8_t ch, const char *dst_addr,
-		const char *dst_port, const char *src_port);
+enum mw_err mw_tcp_connect(uint8_t ch, const char* dst_addr,
+    const char* dst_port, const char* src_port);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Closes and disconnects a socket from specified channel.
  *
  * This function can be used to free the channel associated to both TCP and
@@ -407,9 +410,9 @@ enum mw_err mw_tcp_connect(uint8_t ch, const char *dst_addr,
 enum mw_err mw_close(uint8_t ch);
 
 /// Closes a TCP socket. This is an alias of mw_close().
-#define mw_tcp_disconnect(ch)	mw_close(ch)
+#define mw_tcp_disconnect(ch) mw_close(ch)
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Configures a UDP socket to send/receive data.
  *
  * \param[in] ch       Channel used for the connection.
@@ -421,13 +424,13 @@ enum mw_err mw_close(uint8_t ch);
  *
  * \note Setting to NULL dst_addr and/or dst_port, enables reuse mode.
  ****************************************************************************/
-enum mw_err mw_udp_set(uint8_t ch, const char *dst_addr, const char *dst_port,
-		const char *src_port);
+enum mw_err mw_udp_set(uint8_t ch, const char* dst_addr, const char* dst_port,
+    const char* src_port);
 
 /// Frees a UDP socket. This is an alias of mw_close().
-#define mw_udp_unset(ch)	mw_close(ch)
+#define mw_udp_unset(ch) mw_close(ch)
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Binds a socket to a port, and listens to connections on the port.
  *        If a connection request is received, it will be automatically
  *        accepted.
@@ -439,7 +442,7 @@ enum mw_err mw_udp_set(uint8_t ch, const char *dst_addr, const char *dst_port,
  ****************************************************************************/
 enum mw_err mw_tcp_bind(uint8_t ch, uint16_t port);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Polls a socket until it is ready to transfer data. Typical use of
  * this function is after a successful mw_tcp_bind().
  *
@@ -451,7 +454,7 @@ enum mw_err mw_tcp_bind(uint8_t ch, uint16_t port);
  ****************************************************************************/
 enum mw_err mw_sock_conn_wait(uint8_t ch, int tout_frames);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Receive data, asyncrhonous interface.
  *
  * \param[in] buf     Reception buffer.
@@ -461,13 +464,13 @@ enum mw_err mw_sock_conn_wait(uint8_t ch, int tout_frames);
  *
  * \return Status of the receive procedure.
  ****************************************************************************/
-static inline enum lsd_status mw_recv(char *buf, int16_t len, void *ctx,
-		lsd_recv_cb recv_cb)
+static inline enum lsd_status mw_recv(
+    char* buf, int16_t len, void* ctx, lsd_recv_cb recv_cb)
 {
-	return lsd_recv(buf, len, ctx, recv_cb);
+    return lsd_recv(buf, len, ctx, recv_cb);
 }
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Receive data using an UDP socket in reuse mode.
  *
  * \param[in] data    Receive buffer including the remote address and the
@@ -478,13 +481,13 @@ static inline enum lsd_status mw_recv(char *buf, int16_t len, void *ctx,
  *
  * \return Status of the receive procedure.
  ****************************************************************************/
-static inline enum lsd_status mw_udp_reuse_recv(struct mw_reuse_payload *data,
-		int16_t len, void *ctx, lsd_recv_cb recv_cb)
+static inline enum lsd_status mw_udp_reuse_recv(
+    struct mw_reuse_payload* data, int16_t len, void* ctx, lsd_recv_cb recv_cb)
 {
-	return lsd_recv((char*)data, len, ctx, recv_cb);
+    return lsd_recv((char*)data, len, ctx, recv_cb);
 }
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Send data using a UDP socket in reuse mode.
  *
  * \param[in] ch      Channel to use for the send operation.
@@ -497,13 +500,13 @@ static inline enum lsd_status mw_udp_reuse_recv(struct mw_reuse_payload *data,
  * \return Status of the receive procedure.
  ****************************************************************************/
 static inline enum lsd_status mw_udp_reuse_send(uint8_t ch,
-		const struct mw_reuse_payload *data, int16_t len, void *ctx,
-		lsd_send_cb send_cb)
+    const struct mw_reuse_payload* data, int16_t len, void* ctx,
+    lsd_send_cb send_cb)
 {
-	return lsd_send(ch, (const char*)data, len, ctx, send_cb);
+    return lsd_send(ch, (const char*)data, len, ctx, send_cb);
 }
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Sends data through a socket, using a previously allocated channel.
  * Asynchronous interface.
  *
@@ -521,13 +524,13 @@ static inline enum lsd_status mw_udp_reuse_send(uint8_t ch,
  * is run before this function returns. In this case, the function returns
  * LSD_STAT_COMPLETE.
  ****************************************************************************/
-static inline enum lsd_status mw_send(uint8_t ch, const char *data, int16_t len,
-		void *ctx, lsd_send_cb send_cb)
+static inline enum lsd_status mw_send(
+    uint8_t ch, const char* data, int16_t len, void* ctx, lsd_send_cb send_cb)
 {
-	return lsd_send(ch, data, len, ctx, send_cb);
+    return lsd_send(ch, data, len, ctx, send_cb);
 }
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Receive data, syncrhonous interface.
  *
  * \param[out] ch         Channel on which data was received.
@@ -541,10 +544,10 @@ static inline enum lsd_status mw_send(uint8_t ch, const char *data, int16_t len,
  * \warning Do not use more than one syncrhonous call at once. You must wait
  * until a syncrhonous call ends to issue another one.
  ****************************************************************************/
-enum mw_err mw_recv_sync(uint8_t *ch, char *buf, int16_t *buf_len,
-		uint16_t tout_frames);
+enum mw_err mw_recv_sync(
+    uint8_t* ch, char* buf, int16_t* buf_len, uint16_t tout_frames);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Sends data through a socket, using a previously allocated channel.
  * Synchronous interface.
  *
@@ -559,17 +562,17 @@ enum mw_err mw_recv_sync(uint8_t *ch, char *buf, int16_t *buf_len,
  * \warning Do not use more than one syncrhonous call at once. You must wait
  * until a syncrhonous call ends to issue another one.
  ****************************************************************************/
-enum mw_err mw_send_sync(uint8_t ch, const char *data, uint16_t len,
-		uint16_t tout_frames);
+enum mw_err mw_send_sync(
+    uint8_t ch, const char* data, uint16_t len, uint16_t tout_frames);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Get system status.
  *
  * \return Pointer to system status structure on success, or NULL on error.
  ****************************************************************************/
-union mw_msg_sys_stat *mw_sys_stat_get(void);
+union mw_msg_sys_stat* mw_sys_stat_get(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Get socket status.
  *
  * \param[in] ch Channel associated to the socket asked for status.
@@ -578,7 +581,7 @@ union mw_msg_sys_stat *mw_sys_stat_get(void);
  ****************************************************************************/
 enum mw_sock_stat mw_sock_stat_get(uint8_t ch);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Configure SNTP parameters and timezone.
  *
  * \param[in] tz_str Timezone string (e.g. "CET"). See tzset(3) for details.
@@ -590,9 +593,9 @@ enum mw_sock_stat mw_sock_stat_get(uint8_t ch);
  * \note After a successful invocation, call mw_cfg_save() for changes to
  * be persistent
  ****************************************************************************/
-enum mw_err mw_sntp_cfg_set(const char *tz_str, const char *server[3]);
+enum mw_err mw_sntp_cfg_set(const char* tz_str, const char* server[3]);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Get SNTP parameters and timezone configuration.
  *
  * \param[out] tz_str Timezone string (e.g. "CET"). See tzset(3) for details.
@@ -601,9 +604,9 @@ enum mw_err mw_sntp_cfg_set(const char *tz_str, const char *server[3]);
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_sntp_cfg_get(char **tz_str, char *server[3]);
+enum mw_err mw_sntp_cfg_get(char** tz_str, char* server[3]);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Get date and time.
  *
  * \param[out] dt_bin Date and time in seconds since Epoch. If set to NULL,
@@ -613,9 +616,9 @@ enum mw_err mw_sntp_cfg_get(char **tz_str, char *server[3]);
  * \return A string with the date and time in textual format, e.g.: "Thu Mar
  *         3 12:26:51 2016", or NULL if error.
  ****************************************************************************/
-char *mw_date_time_get(uint32_t dt_bin[2]);
+char* mw_date_time_get(uint32_t dt_bin[2]);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Get the identifiers of the flash chip in the WiFi module.
  *
  * \param[out] man_id ID of the flash chip manufacturer.
@@ -623,9 +626,9 @@ char *mw_date_time_get(uint32_t dt_bin[2]);
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_flash_id_get(uint8_t *man_id, uint16_t *dev_id);
+enum mw_err mw_flash_id_get(uint8_t* man_id, uint16_t* dev_id);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Erase a 4 KiB Flash sector. Every byte of an erased sector will be
  *        read as 0xFF.
  *
@@ -635,7 +638,7 @@ enum mw_err mw_flash_id_get(uint8_t *man_id, uint16_t *dev_id);
  ****************************************************************************/
 enum mw_err mw_flash_sector_erase(uint16_t sect);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Write data to specified flash address.
  *
  * \param[in] addr     Address to which data will be written.
@@ -644,9 +647,9 @@ enum mw_err mw_flash_sector_erase(uint16_t sect);
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_flash_write(uint32_t addr, uint8_t *data, uint16_t data_len);
+enum mw_err mw_flash_write(uint32_t addr, uint8_t* data, uint16_t data_len);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Read data from specified flash address.
  *
  * \param[in] addr     Address from which data will be read.
@@ -654,19 +657,25 @@ enum mw_err mw_flash_write(uint32_t addr, uint8_t *data, uint16_t data_len);
  *
  * \return Pointer to read data on success, or NULL if command failed.
  ****************************************************************************/
-uint8_t *mw_flash_read(uint32_t addr, uint16_t data_len);
+uint8_t* mw_flash_read(uint32_t addr, uint16_t data_len);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Puts the WiFi module in reset state.
  ****************************************************************************/
-#define mw_module_reset()	do{uart_set_bits(MCR, MW__RESET);}while(0)
+#define mw_module_reset()                                                      \
+    do {                                                                       \
+        uart_set_bits(MCR, MW__RESET);                                         \
+    } while (0)
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Releases the module from reset state.
  ****************************************************************************/
-#define mw_module_start()	do{uart_clr_bits(MCR, MW__RESET);}while(0)
+#define mw_module_start()                                                      \
+    do {                                                                       \
+        uart_clr_bits(MCR, MW__RESET);                                         \
+    } while (0)
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Set gamertag information for one slot.
  *
  * \param[in] slot     Slot to use (from 0 to 2).
@@ -677,27 +686,27 @@ uint8_t *mw_flash_read(uint32_t addr, uint16_t data_len);
  * \note After a successful invocation, call mw_cfg_save() for changes to
  * be persistent
  ****************************************************************************/
-enum mw_err mw_gamertag_set(uint8_t slot, const struct mw_gamertag *gamertag);
+enum mw_err mw_gamertag_set(uint8_t slot, const struct mw_gamertag* gamertag);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Get gamertag information for one slot.
  *
  * \param[in] slot Slot to get gamertag from.
  *
  * \return Gamertag information on success, NULL on error.
  ****************************************************************************/
-struct mw_gamertag *mw_gamertag_get(uint8_t slot);
+struct mw_gamertag* mw_gamertag_get(uint8_t slot);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Write a message to the WiFi module log trace.
  *
  * \param[in] msg Message to write to the log trace.
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_log(const char *msg);
+enum mw_err mw_log(const char* msg);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Set factory default configuration.
  *
  * \return MW_ERR_NONE on success, other code on failure.
@@ -705,7 +714,7 @@ enum mw_err mw_log(const char *msg);
  ****************************************************************************/
 enum mw_err mw_factory_settings(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Powers off the WiFi module.
  *
  * The module will be put in deep sleep mode. To wake it up, the RESET pin
@@ -713,23 +722,23 @@ enum mw_err mw_factory_settings(void);
  ****************************************************************************/
 void mw_power_off(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Sleep the specified amount of frames
  *
  * \param[in] frames Number of frames to sleep.
  ****************************************************************************/
 void mw_sleep(uint16_t frames);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Set URL for HTTP requests.
  *
  * \param[in] url URL to set.
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_http_url_set(const char *url);
+enum mw_err mw_http_url_set(const char* url);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Set method for HTTP requests.
  *
  * \param[in] method Method to set.
@@ -738,7 +747,7 @@ enum mw_err mw_http_url_set(const char *url);
  ****************************************************************************/
 enum mw_err mw_http_method_set(enum mw_http_method method);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Add an HTTP header.
  *
  * \param[in] key   Header key.
@@ -746,18 +755,18 @@ enum mw_err mw_http_method_set(enum mw_http_method method);
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_http_header_add(const char *key, const char *value);
+enum mw_err mw_http_header_add(const char* key, const char* value);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Delete a previously added HTTP header.
  *
  * \param[in] key Key of the header to delete.
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_http_header_del(const char *key);
+enum mw_err mw_http_header_del(const char* key);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Open HTTP connection.
  *
  * This functions opens the HTTP connection, sends the HTTP headers, and
@@ -771,7 +780,7 @@ enum mw_err mw_http_header_del(const char *key);
  ****************************************************************************/
 enum mw_err mw_http_open(uint32_t content_len);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Finish an opened HTTP request.
  *
  * After a successful call to mw_http_open(), and sending the content (if
@@ -789,9 +798,9 @@ enum mw_err mw_http_open(uint32_t content_len);
  * no errors, if the returned status code is 4xx or 5xx, there is a client
  * side or server side error.
  ****************************************************************************/
-int mw_http_finish(uint32_t *content_len, int tout_frames);
+int mw_http_finish(uint32_t* content_len, int tout_frames);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Query the X.509 hash of the installed PEM certificate.
  *
  * \return 0xFFFFFFFF if certificate is not installed or error occurs, or
@@ -799,7 +808,7 @@ int mw_http_finish(uint32_t *content_len, int tout_frames);
  ****************************************************************************/
 uint32_t mw_http_cert_query(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Set the PEM certificate to use on HTTPS requests.
  *
  * The certificate is stored on the non volatile memory of the module, and
@@ -816,24 +825,24 @@ uint32_t mw_http_cert_query(void);
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
-enum mw_err mw_http_cert_set(uint32_t cert_hash, const char *cert,
-		uint16_t cert_len);
+enum mw_err mw_http_cert_set(
+    uint32_t cert_hash, const char* cert, uint16_t cert_len);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Clean-up an HTTP request, freeing associated resources.
  *
  * \return MW_ERR_NONE on success, other code on failure.
  ****************************************************************************/
 int mw_http_cleanup(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Get the default server used for MegaWiFi connections.
  *
  * \return The server URL string, or NULL on error.
  ****************************************************************************/
-char *mw_def_server_get(void);
+char* mw_def_server_get(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Set the default server used for MegaWiFi connections.
  *
  * \param[in] server_url The server URL to set.
@@ -843,9 +852,9 @@ char *mw_def_server_get(void);
  * \note After a successful invocation, call mw_cfg_save() for changes to
  * be persistent
  ****************************************************************************/
-enum mw_err mw_def_server_set(const char *server_url);
+enum mw_err mw_def_server_set(const char* server_url);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Get random numbers.
  *
  * \param[in] rnd_len Number of bytes of resulting random array.
@@ -853,9 +862,9 @@ enum mw_err mw_def_server_set(const char *server_url);
  * \return The buffer with the requested random numbers on success, or NULL
  * when error.
  ****************************************************************************/
-uint8_t *mw_hrng_get(uint16_t rnd_len);
+uint8_t* mw_hrng_get(uint16_t rnd_len);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Set endpoint for Game API.
  *
  * Example endpoint for GameJolt: "https://api.gamejolt.com/api/game/v1_2/".
@@ -867,9 +876,9 @@ uint8_t *mw_hrng_get(uint16_t rnd_len);
  *
  * \note The endpoint set persists between successive mw_ga_request() calls.
  ****************************************************************************/
-enum mw_err mw_ga_endpoint_set(const char *endpoint, const char *priv_key);
+enum mw_err mw_ga_endpoint_set(const char* endpoint, const char* priv_key);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Add parameters to the Game API request in key/value format.
  *
  * Example key:value pair for GameJolt: "game_id":"123456".
@@ -887,10 +896,10 @@ enum mw_err mw_ga_endpoint_set(const char *endpoint, const char *priv_key);
  * \note Key/value pairs must NOT be URL encoded. Encoding is handled
  * internally.
  ****************************************************************************/
-enum mw_err mw_ga_key_value_add(const char **key, const char **value,
-		unsigned int num_pairs);
+enum mw_err mw_ga_key_value_add(
+    const char** key, const char** value, unsigned int num_pairs);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Perform a GameAPI request, with the previously set endpoint and
  * key/value pairs.
  *
@@ -920,11 +929,11 @@ enum mw_err mw_ga_key_value_add(const char **key, const char **value,
  * \note path, key and value parameters must not be URL encoded. Encoding is
  * handled internally.
  ****************************************************************************/
-int mw_ga_request(enum mw_http_method method, const char **path,
-		uint8_t num_paths, const char **key, const char **value,
-		uint8_t num_kv_pairs, uint32_t *content_len, int tout_frames);
+int mw_ga_request(enum mw_http_method method, const char** path,
+    uint8_t num_paths, const char** key, const char** value,
+    uint8_t num_kv_pairs, uint32_t* content_len, int tout_frames);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Over-The-Air upgrade WiFi module firmware.
  *
  * \param[in] name Name of the firmware blob to upgrade.
@@ -932,11 +941,11 @@ int mw_ga_request(enum mw_http_method method, const char **path,
  *
  * \return Status of the send procedure.
  ****************************************************************************/
-enum mw_err mw_fw_upgrade(const char *name);
+enum mw_err mw_fw_upgrade(const char* name);
 
 /****** THE FOLLOWING COMMANDS ARE LOWER LEVEL AND USUALLY NOT NEEDED ******/
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Send a command to the WiFi module.
  *
  * \param[in] cmd     Pointer to the filled mw_cmd command structure.
@@ -945,15 +954,14 @@ enum mw_err mw_fw_upgrade(const char *name);
  *
  * \return Status of the send procedure.
  ****************************************************************************/
-static inline enum lsd_status mw_cmd_send(mw_cmd *cmd, void *ctx,
-		lsd_send_cb send_cb)
+static inline enum lsd_status mw_cmd_send(
+    mw_cmd* cmd, void* ctx, lsd_send_cb send_cb)
 {
-	// Send data on control channel (0).
-	return lsd_send(MW_CTRL_CH, cmd->packet, cmd->data_len + 4,
-			ctx, send_cb);
+    // Send data on control channel (0).
+    return lsd_send(MW_CTRL_CH, cmd->packet, cmd->data_len + 4, ctx, send_cb);
 }
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Try obtaining a reply to a command.
  *
  * \param[in] rep     Buffer to hold the command reply.
@@ -962,12 +970,12 @@ static inline enum lsd_status mw_cmd_send(mw_cmd *cmd, void *ctx,
  *
  * \return Status of the reception procedure.
  ****************************************************************************/
-static inline enum lsd_status mw_cmd_recv(mw_cmd *rep, void *ctx,
-		lsd_recv_cb recv_cb) {
-	return lsd_recv(rep->packet, sizeof(mw_cmd), ctx, recv_cb);
+static inline enum lsd_status mw_cmd_recv(
+    mw_cmd* rep, void* ctx, lsd_recv_cb recv_cb)
+{
+    return lsd_recv(rep->packet, sizeof(mw_cmd), ctx, recv_cb);
 }
 
 #endif /*_MEGAWIFI_H_*/
 
 /** \} */
-

@@ -28,47 +28,47 @@
 #define _LOOP_H_
 
 /// Frames per second (60 on NTSC consoles, 50 on PAL machines)
-#define FPS	60
+#define FPS 60
 
 /// Converts milliseconds to frames, rounding to the nearest.
-#define MS_TO_FRAMES(ms)	(((ms)*FPS/500 + 1)/2)
+#define MS_TO_FRAMES(ms) (((ms)*FPS / 500 + 1) / 2)
 
 struct loop_func;
 
 /// Loop function callback definition
-typedef void (*loop_func_cb)(struct loop_func *f);
+typedef void (*loop_func_cb)(struct loop_func* f);
 
 /// Loop function data structure
 struct loop_func {
-	/// Function callback to run on the loop
-	loop_func_cb func_cb;	///< Function callback to run on the loop
-	struct {
-		// Do not manually modify these fields
-		uint16_t to_delete:1; ///< Delete function when 1
-		uint16_t blocked:1;   ///< Blocked on a loop_pend()
-		uint16_t disabled:1;  ///< Function disabled when 1
-	};
+    /// Function callback to run on the loop
+    loop_func_cb func_cb; ///< Function callback to run on the loop
+    struct {
+        // Do not manually modify these fields
+        uint16_t to_delete : 1; ///< Delete function when 1
+        uint16_t blocked : 1; ///< Blocked on a loop_pend()
+        uint16_t disabled : 1; ///< Function disabled when 1
+    };
 };
 
 struct loop_timer;
 
 /// Loop timer callback definition
-typedef void (*loop_timer_cb)(struct loop_timer *t);
+typedef void (*loop_timer_cb)(struct loop_timer* t);
 
 /// Loop timer data structure
 struct loop_timer {
-	loop_timer_cb timer_cb;	///< Timer callback function
-	uint16_t frames;	///< Timer duration in frames
-	uint16_t count;		///< Timer counter (do not manually modify)
-	struct {
-		uint16_t auto_reload:1;	///< Set for timer auto-reload
-	/// Delete timer when 1 (do not manually modify)
-		uint16_t to_delete:1;
-		uint16_t blocked:1;   ///< Blocked on a loop_pend()
-	};
+    loop_timer_cb timer_cb; ///< Timer callback function
+    uint16_t frames; ///< Timer duration in frames
+    uint16_t count; ///< Timer counter (do not manually modify)
+    struct {
+        uint16_t auto_reload : 1; ///< Set for timer auto-reload
+        /// Delete timer when 1 (do not manually modify)
+        uint16_t to_delete : 1;
+        uint16_t blocked : 1; ///< Blocked on a loop_pend()
+    };
 };
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Initialize loop
  *
  * \param[in] max\_func  Maximum number of loop functions to support.
@@ -78,7 +78,7 @@ struct loop_timer {
  ****************************************************************************/
 int loop_init(uint8_t max_func, uint8_t max_timer);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Add a function to the loop.
  *
  * \param[in] func Pointer to the function data structure to add.
@@ -87,69 +87,69 @@ int loop_init(uint8_t max_func, uint8_t max_timer);
  *
  * \note Function will enabled and added to the end of the function list.
  ****************************************************************************/
-int loop_func_add(struct loop_func *func);
+int loop_func_add(struct loop_func* func);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Delete a function from the loop.
  *
  * \param[in] func Pointer to the function data structure to delete.
  *
  * \return 0 on success, 1 if requested timer function was not found.
  ****************************************************************************/
-int loop_func_del(struct loop_func *func);
+int loop_func_del(struct loop_func* func);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Prevent a previously added function from running.
  *
  * \param[in] func Pointer to the function to disable.
  ****************************************************************************/
-static inline void loop_func_disable(struct loop_func *func)
+static inline void loop_func_disable(struct loop_func* func)
 {
-	func->disabled = 1;
+    func->disabled = 1;
 }
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Resume execution of a previously disabled function.
  *
  * \param[in] func Pointer to the function to re-enable.
  ****************************************************************************/
-static inline void loop_func_enable(struct loop_func *func)
+static inline void loop_func_enable(struct loop_func* func)
 {
-	func->disabled = 0;
+    func->disabled = 0;
 }
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Add a timer to the loop.
  *
  * \param[in] timer Pointer to the timer data structure to add.
  *
  * \return 0 on success, 1 if maximun number of timers has been reached.
  ****************************************************************************/
-int loop_timer_add(struct loop_timer *timer);
+int loop_timer_add(struct loop_timer* timer);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Start a previously added timer.
  *
  * \param[in] timer  Pointer to the previously added timer to start.
  * \param[in] frames Number of frames after the timer will trigger.
  ****************************************************************************/
-static inline void loop_timer_start(struct loop_timer *timer, int frames)
+static inline void loop_timer_start(struct loop_timer* timer, int frames)
 {
-	timer->frames = frames;
-	timer->count = 0;
+    timer->frames = frames;
+    timer->count = 0;
 }
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Stop a previously added timer.
  *
  * \param[in] timer Pointer to the previously added timer to stop.
  ****************************************************************************/
-static inline void loop_timer_stop(struct loop_timer *timer)
+static inline void loop_timer_stop(struct loop_timer* timer)
 {
-	timer->frames = 0;
+    timer->frames = 0;
 }
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Delete a timer from the loop.
  *
  * \param[in] timer Pointer to the timer data structure to delete.
@@ -159,9 +159,9 @@ static inline void loop_timer_stop(struct loop_timer *timer)
  * frame is processed by the loop). Thus do not deallocate the timer structure
  * immediately when this function returns.
  ****************************************************************************/
-int loop_timer_del(struct loop_timer *timer);
+int loop_timer_del(struct loop_timer* timer);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Loop function.
  *
  * Once called, this function calls the added functions and timers, and does
@@ -171,7 +171,7 @@ int loop_timer_del(struct loop_timer *timer);
  ****************************************************************************/
 int loop(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Exit a previously entered loop
  *
  * \param[in] return_value Value to be returned by the loop() call.
@@ -179,7 +179,7 @@ int loop(void);
  ****************************************************************************/
 void loop_end(int return_value);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief De-initialize loop module, and free associated resources.
  *
  * \warning Memory allocated using MpAlloc() after a loop_init(), will be
@@ -189,7 +189,7 @@ void loop_end(int return_value);
  ****************************************************************************/
 void loop_deinit(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief This function does not return until a loop_post() is executed.
  *
  * While in this function, the loop continues to run, and other functions and
@@ -203,7 +203,7 @@ void loop_deinit(void);
  ****************************************************************************/
 int loop_pend(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Causes a previously invoked loop_pend() function to return.
  *
  * \param[in] return_value Number to be returned by loop_pend(). Must be
@@ -218,4 +218,3 @@ void loop_post(int return_value);
 #endif /*_LOOP_H_*/
 
 /** \} */
-

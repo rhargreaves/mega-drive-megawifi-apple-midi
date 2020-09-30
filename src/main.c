@@ -1,7 +1,7 @@
-#include "loop.h"
-#include "megawifi.h"
-#include "mpool.h"
-#include "util.h"
+#include "mw/loop.h"
+#include "mw/megawifi.h"
+#include "mw/mpool.h"
+#include "mw/util.h"
 #include <genesis.h>
 
 /// Length of the wflash buffer

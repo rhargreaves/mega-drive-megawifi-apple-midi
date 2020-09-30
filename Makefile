@@ -26,6 +26,7 @@ INCS = -I. \
 	-I$(GENDEV)/m86k-elf/include \
 	-I$(GENDEV)/sgdk/res \
 	-Isrc \
+	-Isrc/mw \
 	-Ires
 CCFLAGS = -std=c11 -Werror \
 	-fno-builtin -DBUILD='"$(BUILD)"' \
@@ -52,6 +53,7 @@ RESS+=$(wildcard *.res)
 RESOURCES+=$(RESS:.res=.o)
 
 CS=$(wildcard src/*.c)
+CS+=$(wildcard src/mw/*.c)
 SS=$(wildcard src/*.s)
 S80S=$(wildcard src/*.s80)
 CS+=$(wildcard *.c)

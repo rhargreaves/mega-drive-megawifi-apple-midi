@@ -1,4 +1,4 @@
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief  Local Symmetric Data-link. Implements an extremely simple
  *         protocol to link two full-duplex devices, multiplexing the
  *         data link.
@@ -16,7 +16,7 @@
  * \author Jesus Alonso (doragasu)
  * \date   2019
  * \note   Unfortunately the Megadrive does have neither an interrupt pin nor
- *         DMA threshold pins in the cartridge slot, so polling is the only 
+ *         DMA threshold pins in the cartridge slot, so polling is the only
  *         way. So you have
  *         Megadrive does not have an interrupt pin on the cart, implementing
  *         more efficient data transmission techniques will be tricky.
@@ -47,40 +47,40 @@
 #include "mw-msg.h"
 
 /// LSD frame overhead in bytes
-#define LSD_OVERHEAD		4
+#define LSD_OVERHEAD 4
 
 /// Maximum number of available simultaneous channels
-#define LSD_MAX_CH		4
+#define LSD_MAX_CH 4
 
 /// Maximum data payload length
-#define LSD_MAX_LEN		 4095
+#define LSD_MAX_LEN 4095
 
 /// Number of buffer frames available
-#define LSD_BUF_FRAMES		2
+#define LSD_BUF_FRAMES 2
 
 /// Return status codes for LSD functions
 enum lsd_status {
-	LSD_STAT_ERR_FRAMING = -5,		///< Frame format error
-	LSD_STAT_ERR_INVALID_CH = -4,		///< Invalid channel
-	LSD_STAT_ERR_FRAME_TOO_LONG = -3,	///< Frame is too long
-	LSD_STAT_ERR_IN_PROGRESS = -2,		///< Operation in progress
-	LSD_STAT_ERROR = -1,			///< General error
-	LSD_STAT_COMPLETE = 0,			///< No error
-	LSD_STAT_BUSY = 1			///< Doing requested operation
+    LSD_STAT_ERR_FRAMING = -5, ///< Frame format error
+    LSD_STAT_ERR_INVALID_CH = -4, ///< Invalid channel
+    LSD_STAT_ERR_FRAME_TOO_LONG = -3, ///< Frame is too long
+    LSD_STAT_ERR_IN_PROGRESS = -2, ///< Operation in progress
+    LSD_STAT_ERROR = -1, ///< General error
+    LSD_STAT_COMPLETE = 0, ///< No error
+    LSD_STAT_BUSY = 1 ///< Doing requested operation
 };
 
 /// Callback for the asynchronous lsd_send() function.
-typedef void (*lsd_send_cb)(enum lsd_status stat, void *ctx);
+typedef void (*lsd_send_cb)(enum lsd_status stat, void* ctx);
 /// Callback for the asynchronous lsd_recv() function.
-typedef void (*lsd_recv_cb)(enum lsd_status stat, uint8_t ch,
-		char *data, uint16_t len, void *ctx);
+typedef void (*lsd_recv_cb)(
+    enum lsd_status stat, uint8_t ch, char* data, uint16_t len, void* ctx);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Module initialization.
  ****************************************************************************/
 void lsd_init(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Enables a channel to start reception and be able to send data.
  *
  * \param[in] ch Channel number.
@@ -89,7 +89,7 @@ void lsd_init(void);
  ****************************************************************************/
 int lsd_ch_enable(uint8_t ch);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Disables a channel to stop reception and prohibit sending data.
  *
  * \param[in] ch Channel number.
@@ -98,8 +98,7 @@ int lsd_ch_enable(uint8_t ch);
  ****************************************************************************/
 int lsd_ch_disable(uint8_t ch);
 
-
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Asynchronously sends data through a previously enabled channel.
  *
  * \param[in] ch      Channel number to use.
@@ -113,10 +112,10 @@ int lsd_ch_disable(uint8_t ch);
  * \note Calling this function while there is a send procedure in progress,
  * will cause the function call to fail with LSD_STAT_SEND_ERR_IN_PROGRESS.
  ****************************************************************************/
-enum lsd_status lsd_send(uint8_t ch, const char *data, int16_t len,
-		void *ctx, lsd_send_cb send_cb);
+enum lsd_status lsd_send(
+    uint8_t ch, const char* data, int16_t len, void* ctx, lsd_send_cb send_cb);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Synchronously sends data through a previously enabled channel.
  *
  * \param[in] ch   Channel number to use.
@@ -126,9 +125,9 @@ enum lsd_status lsd_send(uint8_t ch, const char *data, int16_t len,
  * \return Status of the send procedure.
  * \warning This function polls until the procedure is complete (or errors).
  ****************************************************************************/
-enum lsd_status lsd_send_sync(uint8_t ch, const char *data, int16_t len);
+enum lsd_status lsd_send_sync(uint8_t ch, const char* data, int16_t len);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Asyncrhonously Receives a frame using LSD protocol.
  *
  * \param[in] buf     Buffer for reception.
@@ -138,10 +137,10 @@ enum lsd_status lsd_send_sync(uint8_t ch, const char *data, int16_t len);
  *
  * \return Status of the receive procedure.
  ****************************************************************************/
-enum lsd_status lsd_recv(char *buf, int16_t len, void *ctx,
-		lsd_recv_cb recv_cb);
+enum lsd_status lsd_recv(
+    char* buf, int16_t len, void* ctx, lsd_recv_cb recv_cb);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Syncrhonously Receives a frame using LSD protocol.
  *
  * \param[out]   buf Buffer for received data.
@@ -153,9 +152,9 @@ enum lsd_status lsd_recv(char *buf, int16_t len, void *ctx,
  * \warning If no frame is received when this function is called, the machine
  * will lock.
  ****************************************************************************/
-enum lsd_status lsd_recv_sync(char *buf, uint16_t *len, uint8_t *ch);
+enum lsd_status lsd_recv_sync(char* buf, uint16_t* len, uint8_t* ch);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Processes sends/receives pending data.
  *
  * Call this function as much as possible when using the asynchronous
@@ -163,7 +162,7 @@ enum lsd_status lsd_recv_sync(char *buf, uint16_t *len, uint8_t *ch);
  ****************************************************************************/
 void lsd_process(void);
 
-/************************************************************************//**
+/************************************************************************/ /**
  * \brief Sends syncrhonization frame.
  *
  * This function sends a chunk of 0x55 bytes to help physical layer to
@@ -175,4 +174,3 @@ void lsd_line_sync(void);
 /** \} */
 
 #endif //_LSD_H_
-
