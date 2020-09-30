@@ -16,25 +16,38 @@
 /// Command buffer
 static char cmd_buf[MW_BUFLEN];
 
-static void run_test_2(struct loop_timer* t)
+typedef enum mw_err mw_err;
+
+static mw_err associate_ap(struct loop_timer* t)
 {
-    enum mw_err err;
+    mw_err err;
 
     // Join AP
     VDP_drawText("Associating to AP...", 1, 4);
     err = mw_ap_assoc(0);
     if (err != MW_ERR_NONE) {
-        goto err;
+        return err;
     }
     err = mw_ap_assoc_wait(MS_TO_FRAMES(30000));
     if (err != MW_ERR_NONE) {
-        goto err;
+        return err;
     }
     mw_sleep(3 * 60);
     VDP_drawText("Done!", 22, 4);
 
+    return MW_ERR_NONE;
+}
+
+static void run_test_2(struct loop_timer* t)
+{
+    mw_err err;
+
+    err = associate_ap(t);
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
     struct mw_ip_cfg* ip_cfg;
-    err = mw_ip_current(&ip_cfg);
+    mw_ip_current(&ip_cfg);
     if (err != MW_ERR_NONE) {
         goto err;
     }
@@ -83,7 +96,6 @@ static void idle_cb(struct loop_func* f)
     mw_process();
 }
 
-/// Loop run while idle
 static void main_loop_init(void)
 {
     // Run next frame, do not auto-reload
@@ -96,25 +108,14 @@ static void main_loop_init(void)
     loop_func_add(&megawifi_loop);
 }
 
-/// Global initialization
-static void init(void)
-{
-    // Initialize memory pool
-    mp_init(0);
-    // Initialize game loop
-    main_loop_init();
-    // Initialize MegaWiFi
-    mw_init(cmd_buf, MW_BUFLEN);
-}
-
 int main()
 {
-    init();
+    mp_init(0);
+    main_loop_init();
+    mw_init(cmd_buf, MW_BUFLEN);
 
     VDP_drawText("Mega Drive MegaWiFi Test", 1, 1);
 
     loop();
-
-    while (TRUE) { VDP_waitVSync(); }
     return 0;
 }
