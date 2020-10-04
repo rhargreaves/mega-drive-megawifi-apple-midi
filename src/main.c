@@ -69,26 +69,6 @@ err:
     return err;
 }
 
-static mw_err tcp_receive(struct loop_timer* t)
-{
-    enum mw_err err;
-    char line[40];
-    s16 buf_length = sizeof(line);
-    u8 ch;
-    u8 lineNo = 3;
-
-    while (
-        (err = mw_recv_sync(&ch, line, &buf_length, 60 * 60)) == MW_ERR_NONE) {
-        line[buf_length] = '\0';
-        // Data received
-        char text[100] = {};
-        sprintf(text, "Data: [%s] Len: %d", line, buf_length);
-        VDP_drawText(text, 1, lineNo++);
-    }
-
-    VDP_drawText("Timeout, no connection established", 1, 2);
-}
-
 static mw_err display_ip_addr(struct loop_timer* t)
 {
     mw_err err;
@@ -105,6 +85,30 @@ static mw_err display_ip_addr(struct loop_timer* t)
 
 err:
     VDP_drawText("ERROR GETTING IP", 1, 2);
+    return err;
+}
+
+static mw_err tcp_receive(struct loop_timer* t)
+{
+    enum mw_err err = MW_ERR_NONE;
+
+    u8 lineNo = 3;
+    while (err == MW_ERR_NONE) {
+        char line[40];
+        s16 buf_length = sizeof(line);
+        u8 ch;
+        err = mw_recv_sync(&ch, line, &buf_length, 60 * 60);
+        if (err != MW_ERR_NONE) {
+            VDP_drawText("Timeout, no connection established", 1, 2);
+            return err;
+        }
+        line[buf_length] = '\0';
+        // Data received
+        char text[100] = {};
+        sprintf(text, "Data: [%s] Len: %d", line, buf_length);
+        VDP_drawText(text, 1, lineNo++);
+    }
+
     return err;
 }
 
