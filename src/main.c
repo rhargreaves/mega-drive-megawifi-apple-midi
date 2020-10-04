@@ -53,7 +53,22 @@ err:
     return err;
 }
 
-static mw_err wait_for_tcp_conn(struct loop_timer* t)
+static mw_err open_udp_socket(struct loop_timer* t)
+{
+    enum mw_err err;
+
+    err = mw_udp_set(1, "127.0.0.1", "5567", "5467");
+    if (MW_ERR_NONE != err) {
+        goto err;
+    }
+
+    return err;
+err:
+    VDP_drawText("UDP bind error", 1, 2);
+    return err;
+}
+
+static mw_err wait_for_socket_open(struct loop_timer* t)
 {
     enum mw_err err;
 
@@ -61,7 +76,7 @@ static mw_err wait_for_tcp_conn(struct loop_timer* t)
     if (MW_ERR_NONE != err) {
         goto err;
     }
-    VDP_drawText("TCP Open", 15, 2);
+    VDP_drawText("Socket open", 15, 2);
 
     return MW_ERR_NONE;
 err:
@@ -88,7 +103,7 @@ err:
     return err;
 }
 
-static mw_err tcp_receive(struct loop_timer* t)
+static mw_err receive_data(struct loop_timer* t)
 {
     enum mw_err err = MW_ERR_NONE;
 
@@ -96,16 +111,16 @@ static mw_err tcp_receive(struct loop_timer* t)
     while (err == MW_ERR_NONE) {
         char line[40];
         s16 buf_length = sizeof(line);
-        u8 ch;
+        u8 ch = 1;
         err = mw_recv_sync(&ch, line, &buf_length, 60 * 60);
         if (err != MW_ERR_NONE) {
             VDP_drawText("Timeout, no connection established", 1, 2);
             return err;
         }
-        line[buf_length] = '\0';
+        line[buf_length - 1] = '\0';
         // Data received
         char text[100] = {};
-        sprintf(text, "Data: [%s] Len: %d", line, buf_length);
+        sprintf(text, "Data: [%s] Len: %d", line, buf_length - 1);
         VDP_drawText(text, 1, lineNo++);
     }
 
@@ -124,15 +139,16 @@ static void tcp_test(struct loop_timer* t)
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    err = open_tcp_socket(t);
+    //  err = open_tcp_socket(t);
+    err = open_udp_socket(t);
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    err = wait_for_tcp_conn(t);
+    err = wait_for_socket_open(t);
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    err = tcp_receive(t);
+    err = receive_data(t);
     if (err != MW_ERR_NONE) {
         goto err;
     }
