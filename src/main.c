@@ -43,46 +43,56 @@ static mw_err open_tcp_socket(struct loop_timer* t)
     enum mw_err err;
 
     err = mw_tcp_bind(1, 5567);
-    if (MW_ERR_NONE == err) {
-        // Wait up to an hour for an incoming connection
-        err = mw_sock_conn_wait(1, 60 * 60);
-    }
-    if (MW_ERR_NONE == err) {
-        VDP_drawText("TCP Open", 15, 2);
-
-        char line[40];
-        s16 buf_length = sizeof(line);
-        u8 ch;
-        u8 lineNo = 3;
-
-        while ((err = mw_recv_sync(&ch, line, &buf_length, 60 * 60))
-            == MW_ERR_NONE) {
-            line[buf_length] = '\0';
-            // Data received
-            char text[100] = {};
-            sprintf(text, "Data: %s Len: %d", line, buf_length);
-            VDP_drawText(text, 1, lineNo++);
-        }
-        // Failed to receive data
-        VDP_drawText("Failed to receive data", 1, 3);
-
-        // Incoming connection established
-    } else {
-        VDP_drawText("Timeout, no connection established", 1, 2);
-        // Timeout, no connection established
+    if (MW_ERR_NONE != err) {
+        goto err;
     }
 
-    return MW_ERR_NONE;
+    return err;
+err:
+    VDP_drawText("TCP bind error", 1, 2);
+    return err;
 }
 
-static void run_test_2(struct loop_timer* t)
+static mw_err wait_for_tcp_conn(struct loop_timer* t)
+{
+    enum mw_err err;
+
+    err = mw_sock_conn_wait(1, 60 * 60);
+    if (MW_ERR_NONE != err) {
+        goto err;
+    }
+    VDP_drawText("TCP Open", 15, 2);
+
+    return MW_ERR_NONE;
+err:
+    VDP_drawText("Failed to receive data", 1, 3);
+    return err;
+}
+
+static mw_err tcp_receive(struct loop_timer* t)
+{
+    enum mw_err err;
+    char line[40];
+    s16 buf_length = sizeof(line);
+    u8 ch;
+    u8 lineNo = 3;
+
+    while (
+        (err = mw_recv_sync(&ch, line, &buf_length, 60 * 60)) == MW_ERR_NONE) {
+        line[buf_length] = '\0';
+        // Data received
+        char text[100] = {};
+        sprintf(text, "Data: [%s] Len: %d", line, buf_length);
+        VDP_drawText(text, 1, lineNo++);
+    }
+
+    VDP_drawText("Timeout, no connection established", 1, 2);
+}
+
+static mw_err display_ip_addr(struct loop_timer* t)
 {
     mw_err err;
 
-    err = associate_ap(t);
-    if (err != MW_ERR_NONE) {
-        goto err;
-    }
     struct mw_ip_cfg* ip_cfg;
     err = mw_ip_current(&ip_cfg);
     if (err != MW_ERR_NONE) {
@@ -91,16 +101,41 @@ static void run_test_2(struct loop_timer* t)
     char ip_str[16] = {};
     uint32_to_ip_str(ip_cfg->addr.addr, ip_str);
     VDP_drawText(ip_str, 1, 2);
+    return err;
 
+err:
+    VDP_drawText("ERROR GETTING IP", 1, 2);
+    return err;
+}
+
+static void tcp_test(struct loop_timer* t)
+{
+    mw_err err;
+
+    err = associate_ap(t);
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
+    err = display_ip_addr(t);
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
     err = open_tcp_socket(t);
     if (err != MW_ERR_NONE) {
         goto err;
     }
-
+    err = wait_for_tcp_conn(t);
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
+    err = tcp_receive(t);
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
     goto out;
 
 err:
-    VDP_drawText("ERROR GETTING IP", 1, 2);
+    VDP_drawText("Error somewhere", 1, 2);
 
 out:
     loop_timer_del(t);
@@ -127,7 +162,7 @@ static void megawifi_init_cb(struct loop_timer* t)
         VDP_drawText(line, 1, 0);
 
         // Configuration complete, run test function next frame
-        t->timer_cb = run_test_2;
+        t->timer_cb = tcp_test;
         loop_timer_start(t, 1);
     }
 }
