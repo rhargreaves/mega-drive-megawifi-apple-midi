@@ -112,7 +112,7 @@ static mw_err receive_data(struct loop_timer* t)
         char line[40];
         s16 buf_length = sizeof(line);
         u8 ch = 1;
-        err = mw_recv_sync(&ch, line, &buf_length, 60 * 60);
+        err = mw_recv_sync(&ch, line, &buf_length, 0);
         if (err != MW_ERR_NONE) {
             VDP_drawText("Timeout, no connection established", 1, 2);
             return err;
