@@ -127,7 +127,7 @@ static mw_err receive_data(struct loop_timer* t)
     return err;
 }
 
-static void tcp_test(struct loop_timer* t)
+static void udp_test(struct loop_timer* t)
 {
     mw_err err;
 
@@ -139,7 +139,6 @@ static void tcp_test(struct loop_timer* t)
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    //  err = open_tcp_socket(t);
     err = open_udp_socket(t);
     if (err != MW_ERR_NONE) {
         goto err;
@@ -182,7 +181,7 @@ static void megawifi_init_cb(struct loop_timer* t)
         VDP_drawText(line, 1, 0);
 
         // Configuration complete, run test function next frame
-        t->timer_cb = tcp_test;
+        t->timer_cb = udp_test;
         loop_timer_start(t, 1);
     }
 }
