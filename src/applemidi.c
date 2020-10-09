@@ -1,5 +1,6 @@
 #include "applemidi.h"
 #include <genesis.h>
+#include <stdbool.h>
 
 static mw_err unpack_invitation(
     char* buffer, u16 length, AppleMidiExchangePacket* invite)
@@ -115,12 +116,11 @@ static mw_err process_invitation(u8 ch, char* buffer, u16 length)
     return MW_ERR_NONE;
 }
 
+static u16 timestampSyncCount = 0;
+
 static mw_err process_timestamp_sync(char* buffer, u16 length)
 {
     AppleMidiTimeSyncPacket packet;
-    char text[32];
-    sprintf(text, "Timesync Count: %d", 0);
-    VDP_drawText(text, 1, 17);
     mw_err err = unpack_timestamp_sync(buffer, length, &packet);
     if (err != MW_ERR_NONE) {
         return err;
@@ -134,42 +134,49 @@ static mw_err process_timestamp_sync(char* buffer, u16 length)
         if (err != MW_ERR_NONE) {
             return err;
         }
+
+        char text[32];
+        sprintf(text, "Timestamp Syncs: %d", timestampSyncCount++);
+        VDP_drawText(text, 1, 17);
     }
+
     return MW_ERR_NONE;
+}
+
+static bool has_apple_midi_sig(char* buffer, u16 length)
+{
+    if (length < 2) {
+        return false;
+    }
+    return *((u16*)buffer) == APPLE_MIDI_SIGNATURE;
 }
 
 static mw_err process_control_event(char* buffer, u16 length)
 {
-    mw_err err;
-    // u16 signature = ((u8)buffer[0] << 8) + (u8)buffer[1];
-    if ((u8)buffer[0] != 0xFF || (u8)buffer[1] != 0xFF) {
-        return ERR_INVALID_APPLE_MIDI_SIGNATURE;
-    }
-
-    char* command = &buffer[2];
-    if (strcmp("IN", command) == 0) {
-        process_invitation(CH_CONTROL_PORT, buffer, length);
-    }
-}
-
-static mw_err process_midi_event(char* buffer, u16 length)
-{
-    mw_err err;
-    // u16 signature = ((u8)buffer[0] << 8) + (u8)buffer[1];
-    if ((u8)buffer[0] != 0xFF || (u8)buffer[1] != 0xFF) {
+    if (!has_apple_midi_sig(buffer, length)) {
         return ERR_INVALID_APPLE_MIDI_SIGNATURE;
     }
 
     char* command = &buffer[2];
     if (command[0] == 'I' && command[1] == 'N') {
-        return process_invitation(CH_MIDI_PORT, buffer, length);
-    } else if (command[0] == 'C' && command[1] == 'K') {
-        return process_timestamp_sync(buffer, length);
+        return process_invitation(CH_CONTROL_PORT, buffer, length);
     }
+}
 
-    char text[100];
-    sprintf(text, "Unknown event %s", command);
-    VDP_drawText(text, 1, 14);
+static mw_err process_midi_event(char* buffer, u16 length)
+{
+    if (has_apple_midi_sig(buffer, length)) {
+        char* command = &buffer[2];
+        if (command[0] == 'I' && command[1] == 'N') {
+            return process_invitation(CH_MIDI_PORT, buffer, length);
+        } else if (command[0] == 'C' && command[1] == 'K') {
+            return process_timestamp_sync(buffer, length);
+        } else {
+            char text[100];
+            sprintf(text, "Unknown event %s", command);
+            VDP_drawText(text, 1, 14);
+        }
+    }
 }
 
 mw_err recv_event(void)
