@@ -62,26 +62,12 @@ static mw_err associate_ap(struct loop_timer* t)
     return MW_ERR_NONE;
 }
 
-static mw_err open_tcp_socket(struct loop_timer* t)
+static mw_err open_udp_socket(
+    struct loop_timer* t, u8 ch, const char* dst_port, const char* src_port)
 {
     enum mw_err err;
 
-    err = mw_tcp_bind(1, 5567);
-    if (MW_ERR_NONE != err) {
-        goto err;
-    }
-
-    return err;
-err:
-    VDP_drawText("TCP bind error", 1, 2);
-    return err;
-}
-
-static mw_err open_udp_socket(struct loop_timer* t)
-{
-    enum mw_err err;
-
-    err = mw_udp_set(1, "127.0.0.1", "5004", "5006");
+    err = mw_udp_set(ch, "127.0.0.1", dst_port, src_port);
     if (MW_ERR_NONE != err) {
         goto err;
     }
@@ -92,11 +78,11 @@ err:
     return err;
 }
 
-static mw_err wait_for_socket_open(struct loop_timer* t)
+static mw_err wait_for_socket_open(struct loop_timer* t, u8 ch)
 {
     enum mw_err err;
 
-    err = mw_sock_conn_wait(1, 60 * 60);
+    err = mw_sock_conn_wait(ch, 60 * 60);
     if (MW_ERR_NONE != err) {
         goto err;
     }
@@ -222,11 +208,19 @@ static void udp_test(struct loop_timer* t)
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    err = open_udp_socket(t);
+    err = open_udp_socket(t, 1, "5004", "5006");
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    err = wait_for_socket_open(t);
+    err = open_udp_socket(t, 2, "5005", "5007");
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
+    err = wait_for_socket_open(t, 1);
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
+    err = wait_for_socket_open(t, 2);
     if (err != MW_ERR_NONE) {
         goto err;
     }
