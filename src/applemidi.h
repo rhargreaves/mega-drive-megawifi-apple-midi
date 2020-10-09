@@ -56,9 +56,4 @@ union AppleMidiExchangePacket {
 
 typedef union AppleMidiExchangePacket AppleMidiExchangePacket;
 
-mw_err timesync(void);
-mw_err handshake(u8 ch);
-mw_err send_timesync(AppleMidiTimeSyncPacket* timeSyncPacket);
-mw_err recv_timesync(AppleMidiTimeSyncPacket* timeSyncPacket);
-mw_err send_invite_reply(u8 ch, AppleMidiExchangePacket* invite);
-mw_err receive_invitation(u8 ch, AppleMidiExchangePacket* invite);
+mw_err recv_event(void);

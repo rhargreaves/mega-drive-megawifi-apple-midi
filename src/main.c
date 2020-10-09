@@ -147,29 +147,12 @@ static void udp_test(struct loop_timer* t)
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    err = handshake(CH_CONTROL_PORT);
-    if (err != MW_ERR_NONE) {
-        goto err;
-    }
-    err = handshake(CH_MIDI_PORT);
-    if (err != MW_ERR_NONE) {
-        goto err;
-    }
-    u8 timesync_count = 0;
     while (1) {
-        err = timesync();
+        err = recv_event();
         if (err != MW_ERR_NONE) {
-            goto err;
+            print_error(err);
         }
-        char text[32];
-        sprintf(text, "Timesync Count: %d", timesync_count++);
-        VDP_drawText(text, 1, 17);
     }
-    err = receive_data(t);
-    if (err != MW_ERR_NONE) {
-        goto err;
-    }
-    goto out;
 
 err:
     print_error(err);
