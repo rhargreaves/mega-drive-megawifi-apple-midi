@@ -18,6 +18,9 @@
 #define ERR_UNEXPECTED_CHANNEL (ERR_BASE + 1)
 #define ERR_APPLE_MIDI_EXCH_PKT_TOO_SMALL (ERR_BASE + 2)
 
+#define CH_CONTROL_PORT 1
+#define CH_MIDI_PORT 2
+
 /// Command buffer
 static char cmd_buf[MW_BUFLEN];
 
@@ -115,16 +118,16 @@ err:
 
 #define APPLE_MIDI_SIGNATURE 0xFFFF
 
-static mw_err receive_invitation(AppleMidiExchangePacket* invite)
+static mw_err receive_invitation(u8 ch, AppleMidiExchangePacket* invite)
 {
     char buffer[UDP_PKT_BUFFER_LEN];
     s16 buf_length = sizeof(buffer);
-    u8 ch;
-    mw_err err = mw_recv_sync(&ch, buffer, &buf_length, 0);
+    u8 actualCh;
+    mw_err err = mw_recv_sync(&actualCh, buffer, &buf_length, 0);
     if (err != MW_ERR_NONE) {
         return err;
     }
-    if (ch != 1) {
+    if (actualCh != ch) {
         return ERR_UNEXPECTED_CHANNEL;
     }
     if (buf_length < APPLE_MIDI_EXCH_PKT_MIN_LEN) {
@@ -141,7 +144,7 @@ static mw_err receive_invitation(AppleMidiExchangePacket* invite)
     return MW_ERR_NONE;
 }
 
-static mw_err send_invite_reply(AppleMidiExchangePacket* invite)
+static mw_err send_invite_reply(u8 ch, AppleMidiExchangePacket* invite)
 {
     const u32 MEGADRIVE_SSRC = 0x9E915150;
 
@@ -156,7 +159,6 @@ static mw_err send_invite_reply(AppleMidiExchangePacket* invite)
     s16 buf_length = sizeof(buffer);
     u8 index = 0;
     while (index < UDP_PKT_LEN) { buffer[index] = inviteReply.byte[index++]; }
-    u8 ch = 1;
     mw_err err = mw_send_sync(ch, buffer, index, 0);
     if (err != MW_ERR_NONE) {
         return err;
@@ -196,6 +198,29 @@ static void print_error(mw_err err)
     VDP_drawText(text, 1, 5);
 }
 
+static mw_err handshake(u8 ch)
+{
+    mw_err err = MW_ERR_NONE;
+
+    AppleMidiExchangePacket packet;
+    err = receive_invitation(ch, &packet);
+    if (err != MW_ERR_NONE) {
+        return err;
+    }
+    char text[100];
+    sprintf(text, "Name: %s", packet.name);
+    VDP_drawText(text, 1, 10 + ch);
+
+    err = send_invite_reply(ch, &packet);
+    if (err != MW_ERR_NONE) {
+        return err;
+    }
+    sprintf(text, "Invite sent");
+    VDP_drawText(text, 15, 10 + ch);
+
+    return MW_ERR_NONE;
+}
+
 static void udp_test(struct loop_timer* t)
 {
     mw_err err;
@@ -208,39 +233,30 @@ static void udp_test(struct loop_timer* t)
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    err = open_udp_socket(t, 1, "5004", "5006");
+    err = open_udp_socket(t, CH_CONTROL_PORT, "5004", "5006");
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    err = open_udp_socket(t, 2, "5005", "5007");
+    err = open_udp_socket(t, CH_MIDI_PORT, "5005", "5007");
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    err = wait_for_socket_open(t, 1);
+    err = wait_for_socket_open(t, CH_CONTROL_PORT);
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    err = wait_for_socket_open(t, 2);
+    err = wait_for_socket_open(t, CH_MIDI_PORT);
     if (err != MW_ERR_NONE) {
         goto err;
     }
-
-    AppleMidiExchangePacket packet;
-    err = receive_invitation(&packet);
+    err = handshake(CH_CONTROL_PORT);
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    char text[100];
-    sprintf(text, "Name: %s", packet.name);
-    VDP_drawText(text, 1, 10);
-
-    err = send_invite_reply(&packet);
+    err = handshake(CH_MIDI_PORT);
     if (err != MW_ERR_NONE) {
         goto err;
     }
-    sprintf(text, "Invite sent");
-    VDP_drawText(text, 1, 11);
-
     err = receive_data(t);
     if (err != MW_ERR_NONE) {
         goto err;
