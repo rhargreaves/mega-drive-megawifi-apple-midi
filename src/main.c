@@ -175,7 +175,7 @@ static mw_err receive_data(struct loop_timer* t)
     while (err == MW_ERR_NONE) {
         char line[40];
         s16 buf_length = sizeof(line);
-        u8 ch = 1;
+        u8 ch;
         err = mw_recv_sync(&ch, line, &buf_length, 0);
         if (err != MW_ERR_NONE) {
             VDP_drawText("Timeout, no connection established", 1, 2);
@@ -184,7 +184,7 @@ static mw_err receive_data(struct loop_timer* t)
         line[buf_length - 1] = '\0';
         // Data received
         char text[100] = {};
-        sprintf(text, "Data: [%s] Len: %d", line, buf_length - 1);
+        sprintf(text, "Ch: %d Data: [%s] Len: %d", ch, line, buf_length - 1);
         VDP_drawText(text, 1, lineNo++);
     }
 
