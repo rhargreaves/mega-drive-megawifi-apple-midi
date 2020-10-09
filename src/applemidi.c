@@ -33,20 +33,26 @@ mw_err receive_invitation(u8 ch, AppleMidiExchangePacket* invite)
     return unpack_invitation(buffer, buf_length, invite);
 }
 
-mw_err send_invite_reply(u8 ch, AppleMidiExchangePacket* invite)
+static void pack_invitation_response(u32 initToken, char* buffer, u16* length)
 {
-    AppleMidiExchangePacket inviteReply = { .signature = APPLE_MIDI_SIGNATURE,
+    AppleMidiExchangePacket response = { .signature = APPLE_MIDI_SIGNATURE,
         .command = "OK",
         .name = "MegaDrive",
-        .initToken = invite->initToken,
+        .initToken = initToken,
         .senderSSRC = MEGADRIVE_SSRC,
         .version = 2 };
+    *length = 0;
+    while (*length < UDP_PKT_LEN) {
+        buffer[*length] = response.byte[(*length)++];
+    }
+}
 
+mw_err send_invite_reply(u8 ch, AppleMidiExchangePacket* invite)
+{
     char buffer[UDP_PKT_BUFFER_LEN];
-    s16 buf_length = sizeof(buffer);
-    u8 index = 0;
-    while (index < UDP_PKT_LEN) { buffer[index] = inviteReply.byte[index++]; }
-    mw_err err = mw_send_sync(ch, buffer, index, 0);
+    u16 length;
+    pack_invitation_response(invite->initToken, buffer, &length);
+    mw_err err = mw_send_sync(ch, buffer, length, 0);
     if (err != MW_ERR_NONE) {
         return err;
     }
