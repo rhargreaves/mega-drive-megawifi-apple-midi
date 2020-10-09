@@ -29,6 +29,8 @@ static char cmd_buf[MW_BUFLEN];
 #define UDP_PKT_BUFFER_LEN 64
 #define APPLE_MIDI_EXCH_PKT_MIN_LEN 17
 
+#define APPLE_MIDI_SIGNATURE 0xFFFF
+
 typedef enum mw_err mw_err;
 
 union AppleMidiExchangePacket {
@@ -115,8 +117,6 @@ err:
     VDP_drawText("ERROR GETTING IP", 1, 2);
     return err;
 }
-
-#define APPLE_MIDI_SIGNATURE 0xFFFF
 
 static mw_err receive_invitation(u8 ch, AppleMidiExchangePacket* invite)
 {
@@ -208,15 +208,15 @@ static mw_err handshake(u8 ch)
         return err;
     }
     char text[100];
-    sprintf(text, "Name: %s", packet.name);
+    sprintf(text, "Invited on ch %d:", ch);
     VDP_drawText(text, 1, 10 + ch);
 
     err = send_invite_reply(ch, &packet);
     if (err != MW_ERR_NONE) {
         return err;
     }
-    sprintf(text, "Invite sent");
-    VDP_drawText(text, 15, 10 + ch);
+    sprintf(text, "Responded");
+    VDP_drawText(text, 20, 10 + ch);
 
     return MW_ERR_NONE;
 }
