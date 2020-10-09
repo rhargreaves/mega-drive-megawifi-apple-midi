@@ -1,6 +1,22 @@
 #include "applemidi.h"
 #include <genesis.h>
 
+static mw_err unpack_invitation(
+    char* buffer, u16 length, AppleMidiExchangePacket* invite)
+{
+    if (length < APPLE_MIDI_EXCH_PKT_MIN_LEN) {
+        return ERR_APPLE_MIDI_EXCH_PKT_TOO_SMALL;
+    }
+
+    u8 index = 0;
+    while (index < UDP_PKT_LEN) { invite->byte[index] = buffer[index++]; }
+    if (invite->signature != APPLE_MIDI_SIGNATURE) {
+        return ERR_INVALID_APPLE_MIDI_SIGNATURE;
+    }
+
+    return MW_ERR_NONE;
+}
+
 mw_err receive_invitation(u8 ch, AppleMidiExchangePacket* invite)
 {
     char buffer[UDP_PKT_BUFFER_LEN];
@@ -13,18 +29,8 @@ mw_err receive_invitation(u8 ch, AppleMidiExchangePacket* invite)
     if (actualCh != ch) {
         return ERR_UNEXPECTED_CHANNEL;
     }
-    if (buf_length < APPLE_MIDI_EXCH_PKT_MIN_LEN) {
-        return ERR_APPLE_MIDI_EXCH_PKT_TOO_SMALL;
-    }
 
-    u8 index = 0;
-    while (index < UDP_PKT_LEN) { invite->byte[index] = buffer[index++]; }
-
-    if (invite->signature != APPLE_MIDI_SIGNATURE) {
-        return ERR_INVALID_APPLE_MIDI_SIGNATURE;
-    }
-
-    return MW_ERR_NONE;
+    return unpack_invitation(buffer, buf_length, invite);
 }
 
 mw_err send_invite_reply(u8 ch, AppleMidiExchangePacket* invite)
