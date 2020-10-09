@@ -13,10 +13,13 @@
 /// Maximun number of loop timers
 #define MW_MAX_LOOP_TIMERS 4
 
+#define MEGADRIVE_SSRC 0x9E915150
+
 #define ERR_BASE 100
 #define ERR_INVALID_APPLE_MIDI_SIGNATURE ERR_BASE;
 #define ERR_UNEXPECTED_CHANNEL (ERR_BASE + 1)
 #define ERR_APPLE_MIDI_EXCH_PKT_TOO_SMALL (ERR_BASE + 2)
+#define ERR_INVALID_TIMESYNC_PKT_LENGTH (ERR_BASE + 3)
 
 #define CH_CONTROL_PORT 1
 #define CH_MIDI_PORT 2
@@ -25,13 +28,35 @@
 static char cmd_buf[MW_BUFLEN];
 
 #define NAME_LEN 16
+
 #define UDP_PKT_LEN (16 + NAME_LEN)
 #define UDP_PKT_BUFFER_LEN 64
 #define APPLE_MIDI_EXCH_PKT_MIN_LEN 17
 
+#define TIMESYNC_PKT_LEN (9 * 4)
+
 #define APPLE_MIDI_SIGNATURE 0xFFFF
 
 typedef enum mw_err mw_err;
+
+union AppleMidiTimeSyncPacket {
+    u8 byte[TIMESYNC_PKT_LEN];
+    struct {
+        u16 signature;
+        char ck[2];
+        u32 senderSSRC;
+        u8 count;
+        u8 padding[3];
+        u32 timestamp1Hi;
+        u32 timestamp1Lo;
+        u32 timestamp2Hi;
+        u32 timestamp2Lo;
+        u32 timestamp3Hi;
+        u32 timestamp3Lo;
+    };
+};
+
+typedef union AppleMidiTimeSyncPacket AppleMidiTimeSyncPacket;
 
 union AppleMidiExchangePacket {
     u8 byte[UDP_PKT_LEN];
@@ -146,8 +171,6 @@ static mw_err receive_invitation(u8 ch, AppleMidiExchangePacket* invite)
 
 static mw_err send_invite_reply(u8 ch, AppleMidiExchangePacket* invite)
 {
-    const u32 MEGADRIVE_SSRC = 0x9E915150;
-
     AppleMidiExchangePacket inviteReply = { .signature = APPLE_MIDI_SIGNATURE,
         .command = "OK",
         .name = "MegaDrive",
@@ -198,6 +221,46 @@ static void print_error(mw_err err)
     VDP_drawText(text, 1, 5);
 }
 
+static mw_err recv_timesync(AppleMidiTimeSyncPacket* timeSyncPacket)
+{
+    char buffer[TIMESYNC_PKT_LEN];
+    s16 buf_length = sizeof(buffer);
+    u8 actualCh;
+    mw_err err = mw_recv_sync(&actualCh, buffer, &buf_length, 0);
+    if (err != MW_ERR_NONE) {
+        return err;
+    }
+    if (actualCh != CH_MIDI_PORT) {
+        return ERR_UNEXPECTED_CHANNEL;
+    }
+    if (buf_length != TIMESYNC_PKT_LEN) {
+        return ERR_INVALID_TIMESYNC_PKT_LENGTH;
+    }
+    u8 index = 0;
+    while (index < TIMESYNC_PKT_LEN) {
+        timeSyncPacket->byte[index] = buffer[index++];
+    }
+    if (timeSyncPacket->signature != APPLE_MIDI_SIGNATURE) {
+        return ERR_INVALID_APPLE_MIDI_SIGNATURE;
+    }
+    return MW_ERR_NONE;
+}
+
+static mw_err send_timesync(AppleMidiTimeSyncPacket* timeSyncPacket)
+{
+    char buffer[TIMESYNC_PKT_LEN];
+    s16 buf_length = sizeof(buffer);
+    u8 index = 0;
+    while (index < TIMESYNC_PKT_LEN) {
+        buffer[index] = timeSyncPacket->byte[index++];
+    }
+    mw_err err = mw_send_sync(CH_MIDI_PORT, buffer, index, 0);
+    if (err != MW_ERR_NONE) {
+        return err;
+    }
+    return MW_ERR_NONE;
+}
+
 static mw_err handshake(u8 ch)
 {
     mw_err err = MW_ERR_NONE;
@@ -219,6 +282,28 @@ static mw_err handshake(u8 ch)
     VDP_drawText(text, 20, 10 + ch);
 
     return MW_ERR_NONE;
+}
+
+static mw_err timesync(void)
+{
+    AppleMidiTimeSyncPacket packet;
+    mw_err err = recv_timesync(&packet);
+    if (err != MW_ERR_NONE) {
+        return err;
+    }
+    packet.count = 1;
+    packet.timestamp2Hi = 0;
+    packet.timestamp2Lo = 0;
+    packet.senderSSRC = MEGADRIVE_SSRC;
+    err = send_timesync(&packet);
+    if (err != MW_ERR_NONE) {
+        return err;
+    }
+    err = recv_timesync(&packet);
+    if (err != MW_ERR_NONE) {
+        return err;
+    }
+    return err;
 }
 
 static void udp_test(struct loop_timer* t)
@@ -256,6 +341,16 @@ static void udp_test(struct loop_timer* t)
     err = handshake(CH_MIDI_PORT);
     if (err != MW_ERR_NONE) {
         goto err;
+    }
+    u8 timesync_count = 0;
+    while (1) {
+        err = timesync();
+        if (err != MW_ERR_NONE) {
+            goto err;
+        }
+        char text[32];
+        sprintf(text, "Timesync Count: %d", timesync_count++);
+        VDP_drawText(text, 1, 17);
     }
     err = receive_data(t);
     if (err != MW_ERR_NONE) {
