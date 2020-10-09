@@ -92,15 +92,21 @@ mw_err recv_timesync(AppleMidiTimeSyncPacket* timeSyncPacket)
     return unpack_timestamp_sync(buffer, buf_length, timeSyncPacket);
 }
 
+static void pack_timestamp_sync(
+    AppleMidiTimeSyncPacket* timeSyncPacket, char* buffer, u16* length)
+{
+    *length = 0;
+    while (*length < TIMESYNC_PKT_LEN) {
+        buffer[*length] = timeSyncPacket->byte[(*length)++];
+    }
+}
+
 mw_err send_timesync(AppleMidiTimeSyncPacket* timeSyncPacket)
 {
     char buffer[TIMESYNC_PKT_LEN];
-    s16 buf_length = sizeof(buffer);
-    u8 index = 0;
-    while (index < TIMESYNC_PKT_LEN) {
-        buffer[index] = timeSyncPacket->byte[index++];
-    }
-    mw_err err = mw_send_sync(CH_MIDI_PORT, buffer, index, 0);
+    u16 length;
+    pack_timestamp_sync(timeSyncPacket, buffer, &length);
+    mw_err err = mw_send_sync(CH_MIDI_PORT, buffer, length, 0);
     if (err != MW_ERR_NONE) {
         return err;
     }
