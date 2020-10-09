@@ -14,7 +14,7 @@
 #define MW_MAX_LOOP_TIMERS 4
 
 #define ERR_BASE 100
-#define ERR_NO_APPLE_MIDI_SIGNATURE ERR_BASE;
+#define ERR_INVALID_APPLE_MIDI_SIGNATURE ERR_BASE;
 #define ERR_UNEXPECTED_CHANNEL (ERR_BASE + 1)
 #define ERR_APPLE_MIDI_EXCH_PKT_TOO_SMALL (ERR_BASE + 2)
 
@@ -22,7 +22,7 @@
 static char cmd_buf[MW_BUFLEN];
 
 #define NAME_LEN 16
-#define UDP_PKT_LEN (14 + NAME_LEN)
+#define UDP_PKT_LEN (16 + NAME_LEN)
 #define UDP_PKT_BUFFER_LEN 64
 #define APPLE_MIDI_EXCH_PKT_MIN_LEN 17
 
@@ -31,6 +31,7 @@ typedef enum mw_err mw_err;
 union AppleMidiExchangePacket {
     u8 byte[UDP_PKT_LEN];
     struct {
+        u16 signature;
         char command[2];
         u32 version;
         u32 initToken;
@@ -126,7 +127,7 @@ err:
     return err;
 }
 
-#define APPLE_MIDI_SIGNATURE 0xFF
+#define APPLE_MIDI_SIGNATURE 0xFFFF
 
 static mw_err receive_invitation(AppleMidiExchangePacket* invite)
 {
@@ -144,14 +145,13 @@ static mw_err receive_invitation(AppleMidiExchangePacket* invite)
         return ERR_APPLE_MIDI_EXCH_PKT_TOO_SMALL;
     }
 
-    u8 cursor = 0;
-    if ((u8)buffer[cursor++] != APPLE_MIDI_SIGNATURE
-        || (u8)buffer[cursor++] != APPLE_MIDI_SIGNATURE) {
-        return ERR_NO_APPLE_MIDI_SIGNATURE;
+    u8 index = 0;
+    while (index < UDP_PKT_LEN) { invite->byte[index] = buffer[index++]; }
+
+    if (invite->signature != APPLE_MIDI_SIGNATURE) {
+        return ERR_INVALID_APPLE_MIDI_SIGNATURE;
     }
 
-    u8 index = 0;
-    while (index < UDP_PKT_LEN) { invite->byte[index++] = buffer[cursor++]; }
     return MW_ERR_NONE;
 }
 
@@ -159,11 +159,24 @@ static mw_err send_invite_reply(AppleMidiExchangePacket* invite)
 {
     const u32 MEGADRIVE_SSRC = 0x9E915150;
 
-    AppleMidiExchangePacket inviteReply = { 0 };
-    memcpy(&inviteReply.name, "MegaDrive ", 11);
-    inviteReply.senderSSRC = MEGADRIVE_SSRC;
-    inviteReply.version = 2;
-    inviteReply.initToken = invite->initToken;
+    AppleMidiExchangePacket inviteReply = { .signature = APPLE_MIDI_SIGNATURE,
+        .command = "OK",
+        .name = "MegaDrive",
+        .initToken = invite->initToken,
+        .senderSSRC = MEGADRIVE_SSRC,
+        .version = 2 };
+
+    char buffer[UDP_PKT_BUFFER_LEN];
+    s16 buf_length = sizeof(buffer);
+    u8 index = 0;
+    while (index < UDP_PKT_LEN) { buffer[index] = inviteReply.byte[index++]; }
+    u8 ch = 1;
+    mw_err err = mw_send_sync(ch, buffer, index, 0);
+    if (err != MW_ERR_NONE) {
+        return err;
+    }
+
+    return MW_ERR_NONE;
 }
 
 static mw_err receive_data(struct loop_timer* t)
@@ -226,6 +239,13 @@ static void udp_test(struct loop_timer* t)
     char text[100];
     sprintf(text, "Name: %s", packet.name);
     VDP_drawText(text, 1, 10);
+
+    err = send_invite_reply(&packet);
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
+    sprintf(text, "Invite sent");
+    VDP_drawText(text, 1, 11);
 
     err = receive_data(t);
     if (err != MW_ERR_NONE) {
