@@ -22,20 +22,24 @@
 static char cmd_buf[MW_BUFLEN];
 
 #define NAME_LEN 16
+#define UDP_PKT_LEN (14 + NAME_LEN)
 #define UDP_PKT_BUFFER_LEN 64
 #define APPLE_MIDI_EXCH_PKT_MIN_LEN 17
 
 typedef enum mw_err mw_err;
 
-struct AppleMidiExchangePacket {
-    char command[2];
-    u32 version;
-    u32 initToken;
-    u32 senderSSRC;
-    char name[NAME_LEN];
+union AppleMidiExchangePacket {
+    u8 byte[UDP_PKT_LEN];
+    struct {
+        char command[2];
+        u32 version;
+        u32 initToken;
+        u32 senderSSRC;
+        char name[NAME_LEN];
+    };
 };
 
-typedef struct AppleMidiExchangePacket AppleMidiExchangePacket;
+typedef union AppleMidiExchangePacket AppleMidiExchangePacket;
 
 static mw_err associate_ap(struct loop_timer* t)
 {
@@ -146,21 +150,20 @@ static mw_err receive_invitation(AppleMidiExchangePacket* invite)
         return ERR_NO_APPLE_MIDI_SIGNATURE;
     }
 
-    invite->command[0] = buffer[cursor++];
-    invite->command[1] = buffer[cursor++];
-    invite->version = (buffer[cursor++] << 24) + (buffer[cursor++] << 16)
-        + (buffer[cursor++] << 8) + buffer[cursor++];
-    invite->initToken = (buffer[cursor++] << 24) + (buffer[cursor++] << 16)
-        + (buffer[cursor++] << 8) + buffer[cursor++];
-    invite->senderSSRC = (buffer[cursor++] << 24) + (buffer[cursor++] << 16)
-        + (buffer[cursor++] << 8) + buffer[cursor++];
-
-    u8 nameIdx = 0;
-    while (nameIdx < NAME_LEN
-        && (invite->name[nameIdx++] = buffer[cursor++]) != '\0')
-        ;
-
+    u8 index = 0;
+    while (index < UDP_PKT_LEN) { invite->byte[index++] = buffer[cursor++]; }
     return MW_ERR_NONE;
+}
+
+static mw_err send_invite_reply(AppleMidiExchangePacket* invite)
+{
+    const u32 MEGADRIVE_SSRC = 0x9E915150;
+
+    AppleMidiExchangePacket inviteReply = { 0 };
+    memcpy(&inviteReply.name, "MegaDrive ", 11);
+    inviteReply.senderSSRC = MEGADRIVE_SSRC;
+    inviteReply.version = 2;
+    inviteReply.initToken = invite->initToken;
 }
 
 static mw_err receive_data(struct loop_timer* t)
