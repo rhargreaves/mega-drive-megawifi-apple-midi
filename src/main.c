@@ -13,10 +13,29 @@
 /// Maximun number of loop timers
 #define MW_MAX_LOOP_TIMERS 4
 
+#define ERR_BASE 100
+#define ERR_NO_APPLE_MIDI_SIGNATURE ERR_BASE;
+#define ERR_UNEXPECTED_CHANNEL (ERR_BASE + 1)
+#define ERR_APPLE_MIDI_EXCH_PKT_TOO_SMALL (ERR_BASE + 2)
+
 /// Command buffer
 static char cmd_buf[MW_BUFLEN];
 
+#define NAME_LEN 16
+#define UDP_PKT_BUFFER_LEN 64
+#define APPLE_MIDI_EXCH_PKT_MIN_LEN 17
+
 typedef enum mw_err mw_err;
+
+struct AppleMidiExchangePacket {
+    char command[2];
+    u32 version;
+    u32 initToken;
+    u32 senderSSRC;
+    char name[NAME_LEN];
+};
+
+typedef struct AppleMidiExchangePacket AppleMidiExchangePacket;
 
 static mw_err associate_ap(struct loop_timer* t)
 {
@@ -57,7 +76,7 @@ static mw_err open_udp_socket(struct loop_timer* t)
 {
     enum mw_err err;
 
-    err = mw_udp_set(1, "127.0.0.1", "5567", "5467");
+    err = mw_udp_set(1, "127.0.0.1", "5004", "5006");
     if (MW_ERR_NONE != err) {
         goto err;
     }
@@ -103,9 +122,50 @@ err:
     return err;
 }
 
+#define APPLE_MIDI_SIGNATURE 0xFF
+
+static mw_err receive_invitation(AppleMidiExchangePacket* invite)
+{
+    char buffer[UDP_PKT_BUFFER_LEN];
+    s16 buf_length = sizeof(buffer);
+    u8 ch;
+    mw_err err = mw_recv_sync(&ch, buffer, &buf_length, 0);
+    if (err != MW_ERR_NONE) {
+        return err;
+    }
+    if (ch != 1) {
+        return ERR_UNEXPECTED_CHANNEL;
+    }
+    if (buf_length < APPLE_MIDI_EXCH_PKT_MIN_LEN) {
+        return ERR_APPLE_MIDI_EXCH_PKT_TOO_SMALL;
+    }
+
+    u8 cursor = 0;
+    if ((u8)buffer[cursor++] != APPLE_MIDI_SIGNATURE
+        || (u8)buffer[cursor++] != APPLE_MIDI_SIGNATURE) {
+        return ERR_NO_APPLE_MIDI_SIGNATURE;
+    }
+
+    invite->command[0] = buffer[cursor++];
+    invite->command[1] = buffer[cursor++];
+    invite->version = (buffer[cursor++] << 24) + (buffer[cursor++] << 16)
+        + (buffer[cursor++] << 8) + buffer[cursor++];
+    invite->initToken = (buffer[cursor++] << 24) + (buffer[cursor++] << 16)
+        + (buffer[cursor++] << 8) + buffer[cursor++];
+    invite->senderSSRC = (buffer[cursor++] << 24) + (buffer[cursor++] << 16)
+        + (buffer[cursor++] << 8) + buffer[cursor++];
+
+    u8 nameIdx = 0;
+    while (nameIdx < NAME_LEN
+        && (invite->name[nameIdx++] = buffer[cursor++]) != '\0')
+        ;
+
+    return MW_ERR_NONE;
+}
+
 static mw_err receive_data(struct loop_timer* t)
 {
-    enum mw_err err = MW_ERR_NONE;
+    mw_err err = MW_ERR_NONE;
 
     u8 lineNo = 3;
     while (err == MW_ERR_NONE) {
@@ -125,6 +185,13 @@ static mw_err receive_data(struct loop_timer* t)
     }
 
     return err;
+}
+
+static void print_error(mw_err err)
+{
+    char text[100];
+    sprintf(text, "Error: %d", err);
+    VDP_drawText(text, 1, 5);
 }
 
 static void udp_test(struct loop_timer* t)
@@ -147,6 +214,16 @@ static void udp_test(struct loop_timer* t)
     if (err != MW_ERR_NONE) {
         goto err;
     }
+
+    AppleMidiExchangePacket packet;
+    err = receive_invitation(&packet);
+    if (err != MW_ERR_NONE) {
+        goto err;
+    }
+    char text[100];
+    sprintf(text, "Name: %s", packet.name);
+    VDP_drawText(text, 1, 10);
+
     err = receive_data(t);
     if (err != MW_ERR_NONE) {
         goto err;
@@ -154,7 +231,7 @@ static void udp_test(struct loop_timer* t)
     goto out;
 
 err:
-    VDP_drawText("Error somewhere", 1, 2);
+    print_error(err);
 
 out:
     loop_timer_del(t);
