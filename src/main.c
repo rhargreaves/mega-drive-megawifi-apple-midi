@@ -88,30 +88,6 @@ err:
     return err;
 }
 
-static mw_err receive_data(struct loop_timer* t)
-{
-    mw_err err = MW_ERR_NONE;
-
-    u8 lineNo = 3;
-    while (err == MW_ERR_NONE) {
-        char line[40];
-        s16 buf_length = sizeof(line);
-        u8 ch;
-        err = mw_recv_sync(&ch, line, &buf_length, 0);
-        if (err != MW_ERR_NONE) {
-            VDP_drawText("Timeout, no connection established", 1, 2);
-            return err;
-        }
-        line[buf_length - 1] = '\0';
-        // Data received
-        char text[100] = {};
-        sprintf(text, "Ch: %d Data: [%s] Len: %d", ch, line, buf_length - 1);
-        VDP_drawText(text, 1, lineNo++);
-    }
-
-    return err;
-}
-
 static void print_error(mw_err err)
 {
     char text[100];
@@ -156,8 +132,6 @@ static void udp_test(struct loop_timer* t)
 
 err:
     print_error(err);
-
-out:
     loop_timer_del(t);
 }
 

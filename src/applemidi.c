@@ -66,22 +66,6 @@ static mw_err unpack_timestamp_sync(
     return MW_ERR_NONE;
 }
 
-static mw_err recv_timesync(AppleMidiTimeSyncPacket* timeSyncPacket)
-{
-    char buffer[TIMESYNC_PKT_LEN];
-    s16 buf_length = sizeof(buffer);
-    u8 actualCh;
-    mw_err err = mw_recv_sync(&actualCh, buffer, &buf_length, 0);
-    if (err != MW_ERR_NONE) {
-        return err;
-    }
-    if (actualCh != CH_MIDI_PORT) {
-        return ERR_UNEXPECTED_CHANNEL;
-    }
-
-    return unpack_timestamp_sync(buffer, buf_length, timeSyncPacket);
-}
-
 static void pack_timestamp_sync(
     AppleMidiTimeSyncPacket* timeSyncPacket, char* buffer, u16* length)
 {

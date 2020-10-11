@@ -28,7 +28,7 @@ INCS = -I. \
 	-Isrc \
 	-Isrc/mw \
 	-Ires
-CCFLAGS = -std=c11 -Wall \
+CCFLAGS = -std=c11 -Wall -Werror \
 	-fno-builtin -DBUILD='"$(BUILD)"' \
 	-m68000 -O0 -c -fomit-frame-pointer -g
 Z80FLAGS = -vb2
