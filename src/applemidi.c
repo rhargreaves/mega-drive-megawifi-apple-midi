@@ -195,7 +195,6 @@ static u8 bytesToEmit(u8 status)
 static void emitMidiEvent(u8 currentStatus, char** cursor)
 {
     midi_emit(currentStatus);
-    (*cursor)++;
     for (u8 i = 0; i < bytesToEmit(currentStatus); i++) {
         midi_emit(**cursor);
         (*cursor)++;
@@ -215,6 +214,7 @@ mw_err process_rtp_midi(char* buffer, u16 length)
     while (cursor != midiEnd) {
         if (*cursor & 0x80) { // status bit
             currentStatus = *cursor;
+            cursor++;
             emitMidiEvent(currentStatus, &cursor);
             if (cursor == midiEnd) {
                 break;
@@ -224,12 +224,15 @@ mw_err process_rtp_midi(char* buffer, u16 length)
             // skip over final low delta time octet
             cursor++;
         } else {
-            // emit previous status (emulate MIDI 1.0 DIN)
-            midi_emit(currentStatus);
-            for (u8 i = 0; i < bytesToEmit(currentStatus); i++) {
-                midi_emit(*cursor);
-                cursor++;
-            };
+            // emit event using stored status (emulate MIDI 1.0 DIN)
+            emitMidiEvent(currentStatus, &cursor);
+            if (cursor == midiEnd) {
+                break;
+            }
+            // fast forward over high delta time octets
+            while (*cursor & 0x80) { cursor++; }
+            // skip over final low delta time octet
+            cursor++;
         }
     }
 
