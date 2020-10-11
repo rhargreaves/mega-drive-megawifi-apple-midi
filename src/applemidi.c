@@ -10,7 +10,10 @@ static mw_err unpack_invitation(
     }
 
     u8 index = 0;
-    while (index < UDP_PKT_LEN) { invite->byte[index] = buffer[index++]; }
+    while (index < EXCHANGE_PACKET_LEN) {
+        invite->byte[index] = buffer[index];
+        index++;
+    }
     if (invite->signature != APPLE_MIDI_SIGNATURE) {
         return ERR_INVALID_APPLE_MIDI_SIGNATURE;
     }
@@ -27,8 +30,9 @@ static void pack_invitation_response(u32 initToken, char* buffer, u16* length)
         .senderSSRC = MEGADRIVE_SSRC,
         .version = 2 };
     *length = 0;
-    while (*length < UDP_PKT_LEN) {
-        buffer[*length] = response.byte[(*length)++];
+    while (*length < EXCHANGE_PACKET_LEN) {
+        buffer[*length] = response.byte[*length];
+        (*length)++;
     }
 }
 
@@ -53,7 +57,8 @@ static mw_err unpack_timestamp_sync(
     }
     u8 index = 0;
     while (index < TIMESYNC_PKT_LEN) {
-        timeSyncPacket->byte[index] = buffer[index++];
+        timeSyncPacket->byte[index] = buffer[index];
+        index++;
     }
     if (timeSyncPacket->signature != APPLE_MIDI_SIGNATURE) {
         return ERR_INVALID_APPLE_MIDI_SIGNATURE;
@@ -64,7 +69,7 @@ static mw_err unpack_timestamp_sync(
 static mw_err recv_timesync(AppleMidiTimeSyncPacket* timeSyncPacket)
 {
     char buffer[TIMESYNC_PKT_LEN];
-    u16 buf_length = sizeof(buffer);
+    s16 buf_length = sizeof(buffer);
     u8 actualCh;
     mw_err err = mw_recv_sync(&actualCh, buffer, &buf_length, 0);
     if (err != MW_ERR_NONE) {
@@ -82,7 +87,8 @@ static void pack_timestamp_sync(
 {
     *length = 0;
     while (*length < TIMESYNC_PKT_LEN) {
-        buffer[*length] = timeSyncPacket->byte[(*length)++];
+        buffer[*length] = timeSyncPacket->byte[*length];
+        (*length)++;
     }
 }
 
@@ -171,6 +177,13 @@ mw_err applemidi_process_control_data(char* buffer, u16 length)
     if (is_command_invitation(command)) {
         return process_invitation(CH_CONTROL_PORT, buffer, length);
     }
+
+    return MW_ERR_NONE;
+}
+
+mw_err process_rtp_midi(char* buffer, u16 length)
+{
+    return MW_ERR_NONE;
 }
 
 mw_err applemidi_process_midi_data(char* buffer, u16 length)
@@ -186,5 +199,9 @@ mw_err applemidi_process_midi_data(char* buffer, u16 length)
             sprintf(text, "Unknown event %s", command);
             VDP_drawText(text, 1, 14);
         }
+    } else {
+        return process_rtp_midi(buffer, length);
     }
+
+    return MW_ERR_NONE;
 }

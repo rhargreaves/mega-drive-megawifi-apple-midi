@@ -13,7 +13,9 @@
 
 #define NAME_LEN 16
 
-#define UDP_PKT_LEN (16 + NAME_LEN)
+#define RTP_MIDI_COMMAND_SECTION_HEADER_MAX_LEN 2
+#define RTP_MIDI_HEADER_LEN (3 * 4)
+#define EXCHANGE_PACKET_LEN (16 + NAME_LEN)
 #define UDP_PKT_BUFFER_LEN 64
 #define APPLE_MIDI_EXCH_PKT_MIN_LEN 17
 
@@ -22,6 +24,8 @@
 #define APPLE_MIDI_SIGNATURE 0xFFFF
 
 typedef enum mw_err mw_err;
+
+#pragma pack(push, 1)
 
 union AppleMidiTimeSyncPacket {
     u8 byte[TIMESYNC_PKT_LEN];
@@ -37,13 +41,13 @@ union AppleMidiTimeSyncPacket {
         u32 timestamp2Lo;
         u32 timestamp3Hi;
         u32 timestamp3Lo;
-    } __attribute__((packed));
+    };
 };
 
 typedef union AppleMidiTimeSyncPacket AppleMidiTimeSyncPacket;
 
 union AppleMidiExchangePacket {
-    u8 byte[UDP_PKT_LEN];
+    u8 byte[EXCHANGE_PACKET_LEN];
     struct {
         u16 signature;
         char command[2];
@@ -51,10 +55,45 @@ union AppleMidiExchangePacket {
         u32 initToken;
         u32 senderSSRC;
         char name[NAME_LEN];
-    } __attribute__((packed));
+    };
 };
 
 typedef union AppleMidiExchangePacket AppleMidiExchangePacket;
+
+union RtpMidiHeader {
+    u8 byte[RTP_MIDI_HEADER_LEN];
+    struct {
+        u8 v : 2;
+        u8 p : 1;
+        u8 x : 1;
+        u8 cc : 4;
+        u8 m : 1;
+        u8 pt : 7;
+        u16 sequenceNumber;
+        u32 timestamp;
+        u32 senderSSRC;
+    };
+};
+
+typedef union RtpMidiHeader RtpMidiHeader;
+
+union RtpMidiCommandSectionHeader {
+    u8 byte[RTP_MIDI_COMMAND_SECTION_HEADER_MAX_LEN];
+    struct {
+        u8 longHeader : 1;
+        u8 journalPresent : 1;
+        u8 deltaTimeInFirstCommand : 1;
+        u8 statusNotInSource : 1;
+        union {
+            u8 shortLength : 4;
+            u16 longLength : 12;
+        };
+    };
+};
+
+typedef union RtpMidiCommandSectionHeader RtpMidiCommandSectionHeader;
+
+#pragma pack(pop)
 
 mw_err applemidi_process_control_data(char* buffer, u16 length);
 mw_err applemidi_process_midi_data(char* buffer, u16 length);

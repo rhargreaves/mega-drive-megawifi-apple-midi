@@ -28,7 +28,7 @@ INCS = -I. \
 	-Isrc \
 	-Isrc/mw \
 	-Ires
-CCFLAGS = -std=c11 -Werror \
+CCFLAGS = -std=c11 -Wall \
 	-fno-builtin -DBUILD='"$(BUILD)"' \
 	-m68000 -O0 -c -fomit-frame-pointer -g
 Z80FLAGS = -vb2
@@ -65,7 +65,7 @@ RESOURCES+=$(S80S:.s80=.o)
 
 OBJS = $(RESOURCES)
 
-all: bin/out.bin
+all: test bin/out.bin
 
 boot/sega.o: boot/rom_head.bin
 	$(AS) $(ASFLAGS) boot/sega.s -o $@
@@ -139,7 +139,12 @@ bin/%.bin: %.elf
 boot/rom_head.bin: boot/rom_head.o
 	$(LD) $(LINKFLAGS) --oformat binary -o $@ $<
 
+test:
+	$(MAKE) -C tests
+.PHONY: test
+
 clean:
+	$(MAKE) -C tests clean-target
 	$(RM) $(RESOURCES)
 	$(RM) *.o *.bin *.elf *.map *.iso
 	$(RM) boot/*.o boot/*.bin

@@ -211,43 +211,6 @@ const char* str_to_uint8(const char* str, uint8_t* result)
     return str;
 }
 
-int long_to_str(u32 num, char* str, int buf_len, int pad_len, char pad_chr)
-{
-    int i = 0;
-    int j;
-    int rem;
-    int len = 0;
-
-    // Obtain string length
-    for (rem = num, len = 0; rem; len++, rem /= 10)
-        ;
-    // if number is 0 or negative, increase length by 1
-    if (len == 0) {
-        len++;
-        str[i++] = '0';
-    }
-    if (num < 0) {
-        len++;
-        num = -num;
-        str[i++] = '-';
-    }
-    // Check number fits in buffer
-    if (((len + 1) > buf_len) || ((pad_len + 1) > buf_len)) {
-        return 0;
-    }
-    for (; i < (pad_len - len); i++) { str[i] = pad_chr; }
-
-    // Perform the conversion in reverse order
-    pad_len = MAX(pad_len, len);
-    str[pad_len] = '\0';
-    for (j = pad_len - 1; j >= i; j--) {
-        str[j] = '0' + num % 10;
-        num = num / 10;
-    }
-
-    return pad_len;
-}
-
 void uint8_to_hex_str(uint8_t num, char* str)
 {
     const char map[] = "0123456789ABCDEF";
