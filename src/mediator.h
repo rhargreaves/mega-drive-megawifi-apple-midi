@@ -2,4 +2,4 @@
 #include "applemidi.h"
 #include "mw/megawifi.h"
 
-mw_err net_recv_event(void);
+mw_err mediator_recv_event(void);

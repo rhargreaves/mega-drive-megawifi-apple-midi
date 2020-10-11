@@ -1,8 +1,8 @@
+#include "mediator.h"
 #include "mw/loop.h"
 #include "mw/megawifi.h"
 #include "mw/mpool.h"
 #include "mw/util.h"
-#include "net.h"
 #include <genesis.h>
 
 /// Length of the wflash buffer
@@ -148,7 +148,7 @@ static void udp_test(struct loop_timer* t)
         goto err;
     }
     while (1) {
-        err = net_recv_event();
+        err = mediator_recv_event();
         if (err != MW_ERR_NONE) {
             print_error(err);
         }
