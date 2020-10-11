@@ -37,7 +37,7 @@ union AppleMidiTimeSyncPacket {
         u32 timestamp2Lo;
         u32 timestamp3Hi;
         u32 timestamp3Lo;
-    };
+    } __attribute__((packed));
 };
 
 typedef union AppleMidiTimeSyncPacket AppleMidiTimeSyncPacket;
@@ -51,7 +51,7 @@ union AppleMidiExchangePacket {
         u32 initToken;
         u32 senderSSRC;
         char name[NAME_LEN];
-    };
+    } __attribute__((packed));
 };
 
 typedef union AppleMidiExchangePacket AppleMidiExchangePacket;
