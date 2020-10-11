@@ -2,17 +2,17 @@
 #include <stdarg.h>
 #include <stddef.h>
 
-#include "test_log.c"
+#include "test_applemidi.c"
 #include <cmocka.h>
 
-#define log_test(test) cmocka_unit_test_setup(test, test_log_setup)
+#define applemidi_test(test) cmocka_unit_test_setup(test, test_applemidi_setup)
 
 int main(void)
 {
-    // const struct CMUnitTest tests[] = {
-    //     log_test(test_log_info_writes_to_log_buffer),
+    const struct CMUnitTest tests[] = {
+        applemidi_test(test_applemidi_parses_rtpmidi_packet),
 
-    // };
+    };
 
-    // return cmocka_run_group_tests(tests, NULL, NULL);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }
