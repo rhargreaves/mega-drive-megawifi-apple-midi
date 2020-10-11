@@ -22,13 +22,3 @@ static void test_applemidi_parses_rtpmidi_packet(UNUSED void** state)
 
     assert_int_equal(err, MW_ERR_NONE);
 }
-
-// static void test_log_info_writes_to_log_buffer(UNUSED void** state)
-// {
-//     __real_log_info("Test Message %d", 1, 0);
-
-//     Log* log = __real_log_dequeue();
-
-//     assert_int_not_equal(log->msgLen, 0);
-//     assert_memory_equal("Test Message 1", log->msg, 15);
-// }
