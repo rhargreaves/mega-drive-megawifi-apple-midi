@@ -15,7 +15,9 @@ int main(void)
         applemidi_test(
             test_applemidi_parses_rtpmidi_packet_with_single_midi_event_long_header),
         applemidi_test(
-            test_applemidi_parses_rtpmidi_packet_with_single_2_byte_midi_event)
+            test_applemidi_parses_rtpmidi_packet_with_single_2_byte_midi_event),
+        applemidi_test(
+            test_applemidi_parses_rtpmidi_packet_with_multiple_midi_events)
 
     };
 

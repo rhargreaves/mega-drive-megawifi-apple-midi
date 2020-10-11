@@ -183,6 +183,25 @@ static u16 TwelveBitMidiLength(char* commandSection)
     return (((u16)commandSection[0] << 12) + (u16)commandSection[1]);
 }
 
+static u8 bytesToEmit(u8 status)
+{
+    if ((status & 0xC0) == 0xC0 || (status & 0xD0) == 0xD0) {
+        return 1;
+    } else {
+        return 2;
+    }
+}
+
+static void emitMidiEvent(u8 currentStatus, char** cursor)
+{
+    midi_emit(currentStatus);
+    (*cursor)++;
+    for (u8 i = 0; i < bytesToEmit(currentStatus); i++) {
+        midi_emit(**cursor);
+        (*cursor)++;
+    };
+}
+
 mw_err process_rtp_midi(char* buffer, u16 length)
 {
     char* commandSection = &buffer[RTP_MIDI_HEADER_LEN];
@@ -190,8 +209,29 @@ mw_err process_rtp_midi(char* buffer, u16 length)
     u16 midiLength = longHeader ? TwelveBitMidiLength(commandSection)
                                 : FourBitMidiLength(commandSection);
     char* midiStart = &commandSection[longHeader ? 2 : 1];
-
-    for (u16 i = 0; i < midiLength; i++) { midi_emit(midiStart[i]); }
+    char* midiEnd = &midiStart[midiLength];
+    u8 currentStatus = 0;
+    char* cursor = midiStart;
+    while (cursor != midiEnd) {
+        if (*cursor & 0x80) { // status bit
+            currentStatus = *cursor;
+            emitMidiEvent(currentStatus, &cursor);
+            if (cursor == midiEnd) {
+                break;
+            }
+            // fast forward over high delta time octets
+            while (*cursor & 0x80) { cursor++; }
+            // skip over final low delta time octet
+            cursor++;
+        } else {
+            // emit previous status (emulate MIDI 1.0 DIN)
+            midi_emit(currentStatus);
+            for (u8 i = 0; i < bytesToEmit(currentStatus); i++) {
+                midi_emit(*cursor);
+                cursor++;
+            };
+        }
+    }
 
     return MW_ERR_NONE;
 }
