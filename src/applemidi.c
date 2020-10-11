@@ -3,6 +3,8 @@
 #include <genesis.h>
 #include <stdbool.h>
 
+#include <assert.h>
+
 static mw_err unpack_invitation(
     char* buffer, u16 length, AppleMidiExchangePacket* invite)
 {
@@ -169,11 +171,14 @@ mw_err applemidi_process_control_data(char* buffer, u16 length)
 mw_err process_rtp_midi(char* buffer, u16 length)
 {
     // RtpMidiHeader* header = (RtpMidiHeader*)buffer;
-    // RtpMidiCommandSectionHeader* commandHeader
-    //     = (RtpMidiCommandSectionHeader*)(&buffer[RTP_MIDI_HEADER_LEN]);
-    //  u16 midiLength = commandHeader->shortLength;
+    char* commandSection = &buffer[RTP_MIDI_HEADER_LEN];
+    RtpMidiCommandSectionHeader commandHeader;
+    commandHeader.longHeader = (u8)commandSection[0] >> 7;
 
-    char* midiStart = &buffer[RTP_MIDI_HEADER_LEN + 1];
+    u16 midiStartIndex
+        = RTP_MIDI_HEADER_LEN + (commandHeader.longHeader ? 2 : 1);
+
+    char* midiStart = &buffer[midiStartIndex];
     midi_emit(midiStart[0]);
     midi_emit(midiStart[1]);
     midi_emit(midiStart[2]);
