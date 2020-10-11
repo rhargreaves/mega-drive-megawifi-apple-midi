@@ -172,16 +172,15 @@ mw_err process_rtp_midi(char* buffer, u16 length)
 {
     // RtpMidiHeader* header = (RtpMidiHeader*)buffer;
     char* commandSection = &buffer[RTP_MIDI_HEADER_LEN];
-    RtpMidiCommandSectionHeader commandHeader;
-    commandHeader.longHeader = (u8)commandSection[0] >> 7;
+    // RtpMidiCommandSectionHeader commandHeader;
+    bool longHeader = (u8)commandSection[0] >> 7;
 
-    u16 midiStartIndex
-        = RTP_MIDI_HEADER_LEN + (commandHeader.longHeader ? 2 : 1);
+    u16 midiLength = longHeader
+        ? (((u16)commandSection[0] << 12) + (u16)commandSection[1])
+        : (commandSection[0] & 0x0F);
+    char* midiStart = &commandSection[longHeader ? 2 : 1];
 
-    char* midiStart = &buffer[midiStartIndex];
-    midi_emit(midiStart[0]);
-    midi_emit(midiStart[1]);
-    midi_emit(midiStart[2]);
+    for (u16 i = 0; i < midiLength; i++) { midi_emit(midiStart[i]); }
 
     return MW_ERR_NONE;
 }
