@@ -56,4 +56,5 @@ union AppleMidiExchangePacket {
 
 typedef union AppleMidiExchangePacket AppleMidiExchangePacket;
 
-mw_err recv_event(void);
+mw_err applemidi_process_control_data(char* buffer, u16 length);
+mw_err applemidi_process_midi_data(char* buffer, u16 length);

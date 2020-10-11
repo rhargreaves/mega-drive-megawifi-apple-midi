@@ -151,47 +151,40 @@ static bool has_apple_midi_sig(char* buffer, u16 length)
     return *((u16*)buffer) == APPLE_MIDI_SIGNATURE;
 }
 
-static mw_err process_control_event(char* buffer, u16 length)
+static bool is_command_invitation(char* command)
+{
+    return command[0] == 'I' && command[1] == 'N';
+}
+
+static bool is_command_timestamp_sync(char* command)
+{
+    return command[0] == 'C' && command[1] == 'K';
+}
+
+mw_err applemidi_process_control_data(char* buffer, u16 length)
 {
     if (!has_apple_midi_sig(buffer, length)) {
         return ERR_INVALID_APPLE_MIDI_SIGNATURE;
     }
 
     char* command = &buffer[2];
-    if (command[0] == 'I' && command[1] == 'N') {
+    if (is_command_invitation(command)) {
         return process_invitation(CH_CONTROL_PORT, buffer, length);
     }
 }
 
-static mw_err process_midi_event(char* buffer, u16 length)
+mw_err applemidi_process_midi_data(char* buffer, u16 length)
 {
     if (has_apple_midi_sig(buffer, length)) {
         char* command = &buffer[2];
-        if (command[0] == 'I' && command[1] == 'N') {
+        if (is_command_invitation(command)) {
             return process_invitation(CH_MIDI_PORT, buffer, length);
-        } else if (command[0] == 'C' && command[1] == 'K') {
+        } else if (is_command_timestamp_sync(command)) {
             return process_timestamp_sync(buffer, length);
         } else {
             char text[100];
             sprintf(text, "Unknown event %s", command);
             VDP_drawText(text, 1, 14);
         }
-    }
-}
-
-mw_err recv_event(void)
-{
-    char buffer[128];
-    u16 length = sizeof(buffer);
-    u8 ch;
-    mw_err err = mw_recv_sync(&ch, buffer, &length, 0);
-    if (err != MW_ERR_NONE) {
-        return err;
-    }
-    switch (ch) {
-    case CH_CONTROL_PORT:
-        return process_control_event(buffer, length);
-    case CH_MIDI_PORT:
-        return process_midi_event(buffer, length);
     }
 }
