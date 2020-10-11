@@ -168,16 +168,27 @@ mw_err applemidi_process_control_data(char* buffer, u16 length)
     return MW_ERR_NONE;
 }
 
+static bool isLongHeader(char* commandSection)
+{
+    return (u8)commandSection[0] >> 7;
+}
+
+static u16 FourBitMidiLength(char* commandSection)
+{
+    return commandSection[0] & 0x0F;
+}
+
+static u16 TwelveBitMidiLength(char* commandSection)
+{
+    return (((u16)commandSection[0] << 12) + (u16)commandSection[1]);
+}
+
 mw_err process_rtp_midi(char* buffer, u16 length)
 {
-    // RtpMidiHeader* header = (RtpMidiHeader*)buffer;
     char* commandSection = &buffer[RTP_MIDI_HEADER_LEN];
-    // RtpMidiCommandSectionHeader commandHeader;
-    bool longHeader = (u8)commandSection[0] >> 7;
-
-    u16 midiLength = longHeader
-        ? (((u16)commandSection[0] << 12) + (u16)commandSection[1])
-        : (commandSection[0] & 0x0F);
+    bool longHeader = isLongHeader(commandSection);
+    u16 midiLength = longHeader ? TwelveBitMidiLength(commandSection)
+                                : FourBitMidiLength(commandSection);
     char* midiStart = &commandSection[longHeader ? 2 : 1];
 
     for (u16 i = 0; i < midiLength; i++) { midi_emit(midiStart[i]); }
