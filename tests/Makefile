@@ -31,7 +31,7 @@ CFLAGS=$(INCLUDE_DIRS) \
 	-Wno-char-subscripts
 
  # list of function signature to mock
-MOCKS=midi_process
+MOCKS=midi_emit
 MD_MOCKS=VDP_drawText
 
 LDFLAGS=-ggdb -ffreestanding -lcmocka -L$(CMOCKA_DIR)/build/src -Wl,-rpath=$(CMOCKA_DIR)/build/src
