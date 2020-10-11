@@ -212,28 +212,21 @@ mw_err process_rtp_midi(char* buffer, u16 length)
     u8 currentStatus = 0;
     char* cursor = midiStart;
     while (cursor != midiEnd) {
+
         if (*cursor & 0x80) { // status bit
             currentStatus = *cursor;
             cursor++;
-            emitMidiEvent(currentStatus, &cursor);
-            if (cursor == midiEnd) {
-                break;
-            }
-            // fast forward over high delta time octets
-            while (*cursor & 0x80) { cursor++; }
-            // skip over final low delta time octet
-            cursor++;
-        } else {
-            // emit event using stored status (emulate MIDI 1.0 DIN)
-            emitMidiEvent(currentStatus, &cursor);
-            if (cursor == midiEnd) {
-                break;
-            }
-            // fast forward over high delta time octets
-            while (*cursor & 0x80) { cursor++; }
-            // skip over final low delta time octet
-            cursor++;
+            continue;
         }
+
+        emitMidiEvent(currentStatus, &cursor);
+        if (cursor == midiEnd) {
+            break;
+        }
+        // fast forward over high delta time octets
+        while (*cursor & 0x80) { cursor++; }
+        // skip over final low delta time octet
+        cursor++;
     }
 
     return MW_ERR_NONE;
