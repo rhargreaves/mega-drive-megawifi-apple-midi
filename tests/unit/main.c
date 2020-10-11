@@ -10,7 +10,8 @@
 int main(void)
 {
     const struct CMUnitTest tests[] = {
-        applemidi_test(test_applemidi_parses_rtpmidi_packet),
+        applemidi_test(
+            test_applemidi_parses_rtpmidi_packet_with_single_midi_event),
 
     };
 
