@@ -30,7 +30,7 @@ Linux (requires `cmake` & [gendev](https://github.com/kubilus1/gendev)):
 make
 ```
 
-## Light-Reading
+## Light-reading
 
  * [RFC-6295](https://tools.ietf.org/html/rfc6295)
  * [Apple Network MIDI Protocol](https://developer.apple.com/library/archive/documentation/Audio/Conceptual/MIDINetworkDriverProtocol/MIDI/MIDI.html)
