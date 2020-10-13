@@ -4,7 +4,7 @@
 
 #define MAX_UDP_DATA_LENGTH 1460
 
-mw_err mediator_recv_event(void)
+mw_err mediator_receive(void)
 {
     char buffer[MAX_UDP_DATA_LENGTH];
     s16 length = sizeof(buffer);
@@ -23,7 +23,7 @@ mw_err mediator_recv_event(void)
     return MW_ERR_NONE;
 }
 
-void mediator_send_packet(u8 ch, char* data, u16 len)
+void mediator_send(u8 ch, char* data, u16 len)
 {
     mw_err err = mw_send_sync(ch, data, len, 0);
     if (err == MW_ERR_NONE) {

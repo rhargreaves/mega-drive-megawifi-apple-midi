@@ -43,7 +43,7 @@ static void sendInviteResponse(u8 ch, AppleMidiExchangePacket* invite)
     char buffer[UDP_PKT_BUFFER_LEN];
     u16 length;
     pack_invitation_response(invite->initToken, buffer, &length);
-    mediator_send_packet(ch, buffer, length);
+    mediator_send(ch, buffer, length);
 }
 
 static mw_err unpackTimestampSync(

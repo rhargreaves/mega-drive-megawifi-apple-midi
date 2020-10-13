@@ -124,7 +124,7 @@ static void udp_test(struct loop_timer* t)
         goto err;
     }
     while (1) {
-        err = mediator_recv_event();
+        err = mediator_receive();
         if (err != MW_ERR_NONE) {
             print_error(err);
         }
