@@ -2,6 +2,20 @@
 
 Receiving & sending MIDI events via over MegaWiFi using the Apple MIDI Network protocol
 
+## Support
+
+* Apple MIDI session negotiation
+* RTP-MIDI packets
+  * Both long and short header form
+  * SysEx commands contained in one single command & packet
+  * 2-byte and 3-byte MIDI events
+
+## Limitations
+
+* RTP-MIDI: Phantom status packets are not supported (P = 1)
+* RTP-MIDI: Delta timestamp is not permitted in first command (Z = 1)
+* Apple MIDI: Mega Drive returns zero timestamp in time synchronisation
+
 ## Build
 
 Docker:
