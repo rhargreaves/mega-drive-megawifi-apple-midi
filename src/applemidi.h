@@ -60,41 +60,7 @@ union AppleMidiExchangePacket {
 
 typedef union AppleMidiExchangePacket AppleMidiExchangePacket;
 
-union RtpMidiHeader {
-    u8 byte[RTP_MIDI_HEADER_LEN];
-    struct {
-        u8 v : 2;
-        u8 p : 1;
-        u8 x : 1;
-        u8 cc : 4;
-        u8 m : 1;
-        u8 pt : 7;
-        u16 sequenceNumber;
-        u32 timestamp;
-        u32 senderSSRC;
-    };
-};
-
-typedef union RtpMidiHeader RtpMidiHeader;
-
-union RtpMidiCommandSectionHeader {
-    u8 byte[RTP_MIDI_COMMAND_SECTION_HEADER_MAX_LEN];
-    struct {
-        u8 longHeader : 1;
-        u8 journalPresent : 1;
-        u8 deltaTimeInFirstCommand : 1;
-        u8 statusNotInSource : 1;
-        union {
-            u8 shortLength : 4;
-            u16 longLength : 12;
-        };
-    };
-};
-
-typedef union RtpMidiCommandSectionHeader RtpMidiCommandSectionHeader;
-
 #pragma pack(pop)
 
 mw_err applemidi_processSessionControlPacket(char* buffer, u16 length);
 mw_err applemidi_processSessionMidiPacket(char* buffer, u16 length);
-mw_err applemidi_processRtpMidiPacket(char* buffer, u16 length);
