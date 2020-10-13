@@ -37,6 +37,15 @@ static void emitMidiEvent(u8 status, u8** cursor)
 #define MIDI_SYSEX_START 0xF0
 #define MIDI_SYSEX_END 0xF7
 
+void processSysEx(u8** cursor)
+{
+    do {
+        midi_emit(**cursor);
+        (*cursor)++;
+    } while (**cursor != MIDI_SYSEX_END);
+    midi_emit(**cursor);
+}
+
 mw_err rtpmidi_processRtpMidiPacket(char* buffer, u16 length)
 {
     u8* commandSection = (u8*)&buffer[RTP_MIDI_HEADER_LEN];
@@ -50,11 +59,7 @@ mw_err rtpmidi_processRtpMidiPacket(char* buffer, u16 length)
     while (cursor != midiEnd) {
 
         if (*cursor == MIDI_SYSEX_START) {
-            do {
-                midi_emit(*cursor);
-                cursor++;
-            } while (*cursor != MIDI_SYSEX_END);
-            midi_emit(*cursor);
+            processSysEx(&cursor);
             continue;
         }
 
