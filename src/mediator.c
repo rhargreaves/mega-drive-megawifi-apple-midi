@@ -15,9 +15,9 @@ mw_err mediator_recv_event(void)
     }
     switch (ch) {
     case CH_CONTROL_PORT:
-        return applemidi_process_control_data(buffer, length);
+        return applemidi_processSessionControlPacket(buffer, length);
     case CH_MIDI_PORT:
-        return applemidi_process_midi_data(buffer, length);
+        return applemidi_processSessionMidiPacket(buffer, length);
     }
 
     return MW_ERR_NONE;

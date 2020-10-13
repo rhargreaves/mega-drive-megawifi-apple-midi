@@ -28,7 +28,7 @@ static void test_applemidi_parses_rtpmidi_packet_with_single_midi_event(
     expect_midi_emit(0x48);
     expect_midi_emit(0x6f);
 
-    mw_err err = applemidi_process_midi_data(rtp_packet, len);
+    mw_err err = applemidi_processSessionMidiPacket(rtp_packet, len);
     assert_int_equal(err, MW_ERR_NONE);
 }
 
@@ -45,7 +45,7 @@ static void test_applemidi_parses_rtpmidi_packet_with_single_2_byte_midi_event(
     expect_midi_emit(0xC0);
     expect_midi_emit(0x01);
 
-    mw_err err = applemidi_process_midi_data(rtp_packet, len);
+    mw_err err = applemidi_processSessionMidiPacket(rtp_packet, len);
     assert_int_equal(err, MW_ERR_NONE);
 }
 
@@ -64,7 +64,7 @@ test_applemidi_parses_rtpmidi_packet_with_single_midi_event_long_header(
     expect_midi_emit(0x48);
     expect_midi_emit(0x6f);
 
-    mw_err err = applemidi_process_midi_data(rtp_packet, len);
+    mw_err err = applemidi_processSessionMidiPacket(rtp_packet, len);
     assert_int_equal(err, MW_ERR_NONE);
 }
 
@@ -86,7 +86,7 @@ static void test_applemidi_parses_rtpmidi_packet_with_two_midi_events(
     expect_midi_emit(0x51);
     expect_midi_emit(0x6f);
 
-    mw_err err = applemidi_process_midi_data(rtp_packet, len);
+    mw_err err = applemidi_processSessionMidiPacket(rtp_packet, len);
     assert_int_equal(err, MW_ERR_NONE);
 }
 
@@ -111,7 +111,7 @@ static void test_applemidi_parses_rtpmidi_packet_with_multiple_midi_events(
     expect_midi_emit(0x48);
     expect_midi_emit(0x6f);
 
-    mw_err err = applemidi_process_midi_data(rtp_packet, len);
+    mw_err err = applemidi_processSessionMidiPacket(rtp_packet, len);
     assert_int_equal(err, MW_ERR_NONE);
 }
 
@@ -137,6 +137,6 @@ test_applemidi_parses_rtpmidi_packet_with_multiple_different_midi_events(
     expect_midi_emit(0x48);
     expect_midi_emit(0x6f);
 
-    mw_err err = applemidi_process_midi_data(rtp_packet, len);
+    mw_err err = applemidi_processSessionMidiPacket(rtp_packet, len);
     assert_int_equal(err, MW_ERR_NONE);
 }

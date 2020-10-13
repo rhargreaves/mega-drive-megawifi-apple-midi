@@ -95,5 +95,6 @@ typedef union RtpMidiCommandSectionHeader RtpMidiCommandSectionHeader;
 
 #pragma pack(pop)
 
-mw_err applemidi_process_control_data(char* buffer, u16 length);
-mw_err applemidi_process_midi_data(char* buffer, u16 length);
+mw_err applemidi_processSessionControlPacket(char* buffer, u16 length);
+mw_err applemidi_processSessionMidiPacket(char* buffer, u16 length);
+mw_err applemidi_processRtpMidiPacket(char* buffer, u16 length);

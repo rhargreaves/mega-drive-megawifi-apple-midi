@@ -148,7 +148,7 @@ static bool is_command_timestamp_sync(char* command)
     return command[0] == 'C' && command[1] == 'K';
 }
 
-mw_err applemidi_process_control_data(char* buffer, u16 length)
+mw_err applemidi_processSessionControlPacket(char* buffer, u16 length)
 {
     if (!has_apple_midi_sig(buffer, length)) {
         return ERR_INVALID_APPLE_MIDI_SIGNATURE;
@@ -195,7 +195,7 @@ static void emitMidiEvent(u8 currentStatus, char** cursor)
     };
 }
 
-mw_err process_rtp_midi(char* buffer, u16 length)
+mw_err applemidi_processRtpMidiPacket(char* buffer, u16 length)
 {
     char* commandSection = &buffer[RTP_MIDI_HEADER_LEN];
     bool longHeader = isLongHeader(commandSection);
@@ -225,7 +225,7 @@ mw_err process_rtp_midi(char* buffer, u16 length)
     return MW_ERR_NONE;
 }
 
-mw_err applemidi_process_midi_data(char* buffer, u16 length)
+mw_err applemidi_processSessionMidiPacket(char* buffer, u16 length)
 {
     if (has_apple_midi_sig(buffer, length)) {
         char* command = &buffer[2];
@@ -239,7 +239,7 @@ mw_err applemidi_process_midi_data(char* buffer, u16 length)
             VDP_drawText(text, 1, 14);
         }
     } else {
-        return process_rtp_midi(buffer, length);
+        return applemidi_processRtpMidiPacket(buffer, length);
     }
 
     return MW_ERR_NONE;
