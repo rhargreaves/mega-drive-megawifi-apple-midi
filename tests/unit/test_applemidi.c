@@ -35,7 +35,7 @@ static void test_applemidi_parses_rtpmidi_packet_with_single_midi_event(
 static void test_applemidi_parses_rtpmidi_packet_with_single_2_byte_midi_event(
     UNUSED void** state)
 {
-    const u8 statuses[] = { 0xC0, 0xD0 };
+    const u8 statuses[] = { 0xC0, 0xD0, 0xF1, 0xF3 };
 
     for (u16 i = 0; i < sizeof(statuses); i++) {
         u8 status = statuses[i];
@@ -45,6 +45,31 @@ static void test_applemidi_parses_rtpmidi_packet_with_single_2_byte_midi_event(
             0x08, /* MIDI command section */ 0x02, status, 0x01 };
         size_t len = sizeof(rtp_packet);
 
+        expect_midi_emit(status);
+        expect_midi_emit(0x01);
+
+        mw_err err = applemidi_processSessionMidiPacket(rtp_packet, len);
+        assert_int_equal(err, MW_ERR_NONE);
+    }
+}
+
+static void
+test_applemidi_parses_rtpmidi_packet_with_multiple_2_byte_midi_events(
+    UNUSED void** state)
+{
+    const u8 statuses[] = { 0xC0, 0xD0, 0xF1, 0xF3 };
+
+    for (u16 i = 0; i < sizeof(statuses); i++) {
+        u8 status = statuses[i];
+        char rtp_packet[1024] = { /* V P X CC M PT */ 0x80, 0x61,
+            /* sequence number */ 0x8c, 0x24,
+            /* timestamp */ 0x00, 0x58, 0xbb, 0x40, /* SSRC */ 0xac, 0x67, 0xe1,
+            0x08, /* MIDI command section */ 0x05, status, 0x01, 0x00, status,
+            0x01 };
+        size_t len = sizeof(rtp_packet);
+
+        expect_midi_emit(status);
+        expect_midi_emit(0x01);
         expect_midi_emit(status);
         expect_midi_emit(0x01);
 
