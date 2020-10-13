@@ -25,10 +25,10 @@ static u8 bytesToEmit(u8 status)
     }
 }
 
-static void emitMidiEvent(u8 currentStatus, char** cursor)
+static void emitMidiEvent(u8 status, char** cursor)
 {
-    midi_emit(currentStatus);
-    for (u8 i = 0; i < bytesToEmit(currentStatus); i++) {
+    midi_emit(status);
+    for (u8 i = 0; i < bytesToEmit(status); i++) {
         midi_emit(**cursor);
         (*cursor)++;
     };
