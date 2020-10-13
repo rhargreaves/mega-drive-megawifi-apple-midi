@@ -29,7 +29,8 @@ INCS = -I. \
 	-Isrc/mw \
 	-Ires
 CCFLAGS = -std=c11 -Wall -Werror \
-	-fno-builtin -DBUILD='"$(BUILD)"' \
+	-fno-builtin \
+	-DBUILD='"$(BUILD)"' \
 	-m68000 -O0 -c -fomit-frame-pointer -g
 Z80FLAGS = -vb2
 ASFLAGS = -m68000 --register-prefix-optional

@@ -1,5 +1,6 @@
 #include "mediator.h"
 #include "applemidi.h"
+#include "sys.h"
 
 #define MAX_UDP_DATA_LENGTH 1460
 
@@ -20,4 +21,12 @@ mw_err mediator_recv_event(void)
     }
 
     return MW_ERR_NONE;
+}
+
+void mediator_send_packet(u8 ch, char* data, u16 len)
+{
+    mw_err err = mw_send_sync(ch, data, len, 0);
+    if (err == MW_ERR_NONE) {
+        SYS_die("mw_send_sync returned error");
+    }
 }

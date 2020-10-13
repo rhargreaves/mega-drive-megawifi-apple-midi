@@ -1,11 +1,10 @@
 #include "applemidi.h"
+#include "mediator.h"
 #include "midi.h"
 #include <genesis.h>
 #include <stdbool.h>
 
-#include <assert.h>
-
-static mw_err unpack_invitation(
+static mw_err unpackInvitation(
     char* buffer, u16 length, AppleMidiExchangePacket* invite)
 {
     if (length < APPLE_MIDI_EXCH_PKT_MIN_LEN) {
@@ -39,20 +38,15 @@ static void pack_invitation_response(u32 initToken, char* buffer, u16* length)
     }
 }
 
-static mw_err send_invite_reply(u8 ch, AppleMidiExchangePacket* invite)
+static void sendInviteResponse(u8 ch, AppleMidiExchangePacket* invite)
 {
     char buffer[UDP_PKT_BUFFER_LEN];
     u16 length;
     pack_invitation_response(invite->initToken, buffer, &length);
-    mw_err err = mw_send_sync(ch, buffer, length, 0);
-    if (err != MW_ERR_NONE) {
-        return err;
-    }
-
-    return MW_ERR_NONE;
+    mediator_send_packet(ch, buffer, length);
 }
 
-static mw_err unpack_timestamp_sync(
+static mw_err unpackTimestampSync(
     char* buffer, u16 length, AppleMidiTimeSyncPacket* timeSyncPacket)
 {
     if (length != TIMESYNC_PKT_LEN) {
@@ -69,7 +63,7 @@ static mw_err unpack_timestamp_sync(
     return MW_ERR_NONE;
 }
 
-static void pack_timestamp_sync(
+static void packTimestampSync(
     AppleMidiTimeSyncPacket* timeSyncPacket, char* buffer, u16* length)
 {
     *length = 0;
@@ -79,11 +73,11 @@ static void pack_timestamp_sync(
     }
 }
 
-static mw_err send_timesync(AppleMidiTimeSyncPacket* timeSyncPacket)
+static mw_err sendTimestampSyncResponse(AppleMidiTimeSyncPacket* timeSyncPacket)
 {
     char buffer[TIMESYNC_PKT_LEN];
     u16 length;
-    pack_timestamp_sync(timeSyncPacket, buffer, &length);
+    packTimestampSync(timeSyncPacket, buffer, &length);
     mw_err err = mw_send_sync(CH_MIDI_PORT, buffer, length, 0);
     if (err != MW_ERR_NONE) {
         return err;
@@ -91,18 +85,18 @@ static mw_err send_timesync(AppleMidiTimeSyncPacket* timeSyncPacket)
     return MW_ERR_NONE;
 }
 
-static mw_err process_invitation(u8 ch, char* buffer, u16 length)
+static mw_err processInvitation(u8 ch, char* buffer, u16 length)
 {
     AppleMidiExchangePacket packet;
-    mw_err err = unpack_invitation(buffer, length, &packet);
+    mw_err err = unpackInvitation(buffer, length, &packet);
+    if (err != MW_ERR_NONE) {
+        return err;
+    }
     char text[100];
     sprintf(text, "Invited on ch %d:", ch);
     VDP_drawText(text, 1, 10 + ch);
 
-    err = send_invite_reply(ch, &packet);
-    if (err != MW_ERR_NONE) {
-        return err;
-    }
+    sendInviteResponse(ch, &packet);
     sprintf(text, "Responded");
     VDP_drawText(text, 20, 10 + ch);
 
@@ -114,7 +108,7 @@ static u16 timestampSyncCount = 0;
 static mw_err process_timestamp_sync(char* buffer, u16 length)
 {
     AppleMidiTimeSyncPacket packet;
-    mw_err err = unpack_timestamp_sync(buffer, length, &packet);
+    mw_err err = unpackTimestampSync(buffer, length, &packet);
     if (err != MW_ERR_NONE) {
         return err;
     }
@@ -123,7 +117,7 @@ static mw_err process_timestamp_sync(char* buffer, u16 length)
         packet.timestamp2Hi = 0;
         packet.timestamp2Lo = 0;
         packet.senderSSRC = MEGADRIVE_SSRC;
-        err = send_timesync(&packet);
+        err = sendTimestampSyncResponse(&packet);
         if (err != MW_ERR_NONE) {
             return err;
         }
@@ -162,7 +156,7 @@ mw_err applemidi_process_control_data(char* buffer, u16 length)
 
     char* command = &buffer[2];
     if (is_command_invitation(command)) {
-        return process_invitation(CH_CONTROL_PORT, buffer, length);
+        return processInvitation(CH_CONTROL_PORT, buffer, length);
     }
 
     return MW_ERR_NONE;
@@ -236,7 +230,7 @@ mw_err applemidi_process_midi_data(char* buffer, u16 length)
     if (has_apple_midi_sig(buffer, length)) {
         char* command = &buffer[2];
         if (is_command_invitation(command)) {
-            return process_invitation(CH_MIDI_PORT, buffer, length);
+            return processInvitation(CH_MIDI_PORT, buffer, length);
         } else if (is_command_timestamp_sync(command)) {
             return process_timestamp_sync(buffer, length);
         } else {

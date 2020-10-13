@@ -31,8 +31,11 @@ CFLAGS=$(INCLUDE_DIRS) \
 	-Wno-char-subscripts
 
  # list of function signature to mock
-MOCKS=midi_emit
-MD_MOCKS=VDP_drawText
+MOCKS=midi_emit \
+	mediator_recv_event \
+	mediator_send_packet
+MD_MOCKS=VDP_drawText \
+	SYS_die
 
 LDFLAGS=-ggdb -ffreestanding -lcmocka -L$(CMOCKA_DIR)/build/src -Wl,-rpath=$(CMOCKA_DIR)/build/src
 LDFLAGS+=$(foreach MOCK,$(MD_MOCKS),-Wl,--wrap=$(MOCK))
