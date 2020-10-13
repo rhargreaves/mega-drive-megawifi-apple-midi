@@ -23,7 +23,7 @@ static mw_err unpackInvitation(
     return MW_ERR_NONE;
 }
 
-static void pack_invitation_response(u32 initToken, char* buffer, u16* length)
+static void packInvitationResponse(u32 initToken, char* buffer, u16* length)
 {
     AppleMidiExchangePacket response = { .signature = APPLE_MIDI_SIGNATURE,
         .command = "OK",
@@ -42,7 +42,7 @@ static void sendInviteResponse(u8 ch, AppleMidiExchangePacket* invite)
 {
     char buffer[UDP_PKT_BUFFER_LEN];
     u16 length;
-    pack_invitation_response(invite->initToken, buffer, &length);
+    packInvitationResponse(invite->initToken, buffer, &length);
     mediator_send(ch, buffer, length);
 }
 
@@ -73,7 +73,7 @@ static void packTimestampSync(
     }
 }
 
-static mw_err sendTimestampSyncResponse(AppleMidiTimeSyncPacket* timeSyncPacket)
+static mw_err sendTimestampSync(AppleMidiTimeSyncPacket* timeSyncPacket)
 {
     char buffer[TIMESYNC_PKT_LEN];
     u16 length;
@@ -105,7 +105,7 @@ static mw_err processInvitation(u8 ch, char* buffer, u16 length)
 
 static u16 timestampSyncCount = 0;
 
-static mw_err process_timestamp_sync(char* buffer, u16 length)
+static mw_err processTimestampSync(char* buffer, u16 length)
 {
     AppleMidiTimeSyncPacket packet;
     mw_err err = unpackTimestampSync(buffer, length, &packet);
@@ -117,7 +117,7 @@ static mw_err process_timestamp_sync(char* buffer, u16 length)
         packet.timestamp2Hi = 0;
         packet.timestamp2Lo = 0;
         packet.senderSSRC = MEGADRIVE_SSRC;
-        err = sendTimestampSyncResponse(&packet);
+        err = sendTimestampSync(&packet);
         if (err != MW_ERR_NONE) {
             return err;
         }
@@ -130,7 +130,7 @@ static mw_err process_timestamp_sync(char* buffer, u16 length)
     return MW_ERR_NONE;
 }
 
-static bool has_apple_midi_sig(char* buffer, u16 length)
+static bool hasAppleMidiSignature(char* buffer, u16 length)
 {
     if (length < 2) {
         return false;
@@ -138,24 +138,24 @@ static bool has_apple_midi_sig(char* buffer, u16 length)
     return *((u16*)buffer) == APPLE_MIDI_SIGNATURE;
 }
 
-static bool is_command_invitation(char* command)
+static bool isInvitationCommand(char* command)
 {
     return command[0] == 'I' && command[1] == 'N';
 }
 
-static bool is_command_timestamp_sync(char* command)
+static bool isTimestampSyncCommand(char* command)
 {
     return command[0] == 'C' && command[1] == 'K';
 }
 
 mw_err applemidi_processSessionControlPacket(char* buffer, u16 length)
 {
-    if (!has_apple_midi_sig(buffer, length)) {
+    if (!hasAppleMidiSignature(buffer, length)) {
         return ERR_INVALID_APPLE_MIDI_SIGNATURE;
     }
 
     char* command = &buffer[2];
-    if (is_command_invitation(command)) {
+    if (isInvitationCommand(command)) {
         return processInvitation(CH_CONTROL_PORT, buffer, length);
     }
 
@@ -164,12 +164,12 @@ mw_err applemidi_processSessionControlPacket(char* buffer, u16 length)
 
 mw_err applemidi_processSessionMidiPacket(char* buffer, u16 length)
 {
-    if (has_apple_midi_sig(buffer, length)) {
+    if (hasAppleMidiSignature(buffer, length)) {
         char* command = &buffer[2];
-        if (is_command_invitation(command)) {
+        if (isInvitationCommand(command)) {
             return processInvitation(CH_MIDI_PORT, buffer, length);
-        } else if (is_command_timestamp_sync(command)) {
-            return process_timestamp_sync(buffer, length);
+        } else if (isTimestampSyncCommand(command)) {
+            return processTimestampSync(buffer, length);
         } else {
             char text[100];
             sprintf(text, "Unknown event %s", command);

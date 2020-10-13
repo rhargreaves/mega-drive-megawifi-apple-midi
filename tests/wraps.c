@@ -11,6 +11,10 @@ void __wrap_VDP_drawText(const char* str, u16 x, u16 y)
 {
 }
 
+void __wrap_VDP_clearTextArea(u16 x, u16 y, u16 w, u16 h)
+{
+}
+
 void __wrap_midi_emit(u8 midiByte)
 {
     check_expected(midiByte);

@@ -35,6 +35,7 @@ MOCKS=midi_emit \
 	mediator_recv_event \
 	mediator_send_packet
 MD_MOCKS=VDP_drawText \
+	VDP_clearTextArea \
 	SYS_die
 
 LDFLAGS=-ggdb -ffreestanding -lcmocka -L$(CMOCKA_DIR)/build/src -Wl,-rpath=$(CMOCKA_DIR)/build/src
