@@ -173,12 +173,12 @@ static bool isLongHeader(char* commandSection)
     return (u8)commandSection[0] >> 7;
 }
 
-static u16 FourBitMidiLength(char* commandSection)
+static u16 fourBitMidiLength(char* commandSection)
 {
     return commandSection[0] & 0x0F;
 }
 
-static u16 TwelveBitMidiLength(char* commandSection)
+static u16 twelveBitMidiLength(char* commandSection)
 {
     return (((u16)commandSection[0] << 12) + (u16)commandSection[1]);
 }
@@ -205,21 +205,20 @@ mw_err process_rtp_midi(char* buffer, u16 length)
 {
     char* commandSection = &buffer[RTP_MIDI_HEADER_LEN];
     bool longHeader = isLongHeader(commandSection);
-    u16 midiLength = longHeader ? TwelveBitMidiLength(commandSection)
-                                : FourBitMidiLength(commandSection);
+    u16 midiLength = longHeader ? twelveBitMidiLength(commandSection)
+                                : fourBitMidiLength(commandSection);
     char* midiStart = &commandSection[longHeader ? 2 : 1];
     char* midiEnd = &midiStart[midiLength];
-    u8 currentStatus = 0;
+    u8 status = 0;
     char* cursor = midiStart;
     while (cursor != midiEnd) {
-
-        if (*cursor & 0x80) { // status bit
-            currentStatus = *cursor;
+        if (*cursor & 0x80) { // status bit present
+            status = *cursor;
             cursor++;
             continue;
         }
 
-        emitMidiEvent(currentStatus, &cursor);
+        emitMidiEvent(status, &cursor);
         if (cursor == midiEnd) {
             break;
         }
