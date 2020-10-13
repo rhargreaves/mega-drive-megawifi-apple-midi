@@ -1,17 +1,17 @@
 #include "rtpmidi.h"
 #include "midi.h"
 
-static bool isLongHeader(char* commandSection)
+static bool isLongHeader(u8* commandSection)
 {
     return (u8)commandSection[0] >> 7;
 }
 
-static u16 fourBitMidiLength(char* commandSection)
+static u16 fourBitMidiLength(u8* commandSection)
 {
     return commandSection[0] & 0x0F;
 }
 
-static u16 twelveBitMidiLength(char* commandSection)
+static u16 twelveBitMidiLength(u8* commandSection)
 {
     return (((u16)commandSection[0] << 12) + (u16)commandSection[1]);
 }
@@ -25,7 +25,7 @@ static u8 bytesToEmit(u8 status)
     }
 }
 
-static void emitMidiEvent(u8 status, char** cursor)
+static void emitMidiEvent(u8 status, u8** cursor)
 {
     midi_emit(status);
     for (u8 i = 0; i < bytesToEmit(status); i++) {
@@ -34,17 +34,30 @@ static void emitMidiEvent(u8 status, char** cursor)
     };
 }
 
+#define MIDI_SYSEX_START 0xF0
+#define MIDI_SYSEX_END 0xF7
+
 mw_err rtpmidi_processRtpMidiPacket(char* buffer, u16 length)
 {
-    char* commandSection = &buffer[RTP_MIDI_HEADER_LEN];
+    u8* commandSection = (u8*)&buffer[RTP_MIDI_HEADER_LEN];
     bool longHeader = isLongHeader(commandSection);
     u16 midiLength = longHeader ? twelveBitMidiLength(commandSection)
                                 : fourBitMidiLength(commandSection);
-    char* midiStart = &commandSection[longHeader ? 2 : 1];
-    char* midiEnd = &midiStart[midiLength];
+    u8* midiStart = &commandSection[longHeader ? 2 : 1];
+    u8* midiEnd = &midiStart[midiLength];
     u8 status = 0;
-    char* cursor = midiStart;
+    u8* cursor = midiStart;
     while (cursor != midiEnd) {
+
+        if (*cursor == MIDI_SYSEX_START) {
+            do {
+                midi_emit(*cursor);
+                cursor++;
+            } while (*cursor != MIDI_SYSEX_END);
+            midi_emit(*cursor);
+            continue;
+        }
+
         if (*cursor & 0x80) { // status bit present
             status = *cursor;
             cursor++;
