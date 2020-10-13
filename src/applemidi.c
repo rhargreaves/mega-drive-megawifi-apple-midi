@@ -93,12 +93,12 @@ static mw_err processInvitation(u8 ch, char* buffer, u16 length)
         return err;
     }
     char text[100];
-    sprintf(text, "Invited on ch %d:", ch);
-    VDP_drawText(text, 1, 10 + ch);
+    sprintf(text, "Invite recv'd on UDP ch %d:", ch);
+    VDP_drawText(text, 1, 2 + ch);
 
     sendInviteResponse(ch, &packet);
-    sprintf(text, "Responded");
-    VDP_drawText(text, 20, 10 + ch);
+    sprintf(text, "Ack'd");
+    VDP_drawText(text, 28, 2 + ch);
 
     return MW_ERR_NONE;
 }
@@ -124,7 +124,7 @@ static mw_err process_timestamp_sync(char* buffer, u16 length)
 
         char text[32];
         sprintf(text, "Timestamp Syncs: %d", timestampSyncCount++);
-        VDP_drawText(text, 1, 17);
+        VDP_drawText(text, 1, 5);
     }
 
     return MW_ERR_NONE;

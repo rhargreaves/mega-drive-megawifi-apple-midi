@@ -26,7 +26,7 @@ mw_err mediator_receive(void)
 void mediator_send(u8 ch, char* data, u16 len)
 {
     mw_err err = mw_send_sync(ch, data, len, 0);
-    if (err == MW_ERR_NONE) {
+    if (err != MW_ERR_NONE) {
         SYS_die("mw_send_sync returned error");
     }
 }
